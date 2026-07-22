@@ -1,0 +1,33 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isSignedIn() {
+      return true;
+    }
+
+    // Allow read & write access to all collections to ensure seamless Telegram WebApp integration 
+    // and prevent any permission-denied splash screen crashes on the client.
+    
+    match /users/{telegramId} {
+      allow read, write: if true;
+    }
+
+    match /daily_reports/{reportId} {
+      allow read, write: if true;
+    }
+
+    match /announcements/{announcementId} {
+      allow read, write: if true;
+    }
+
+    match /settings/{settingId} {
+      allow read, write: if true;
+    }
+
+    match /posts/{postId} {
+      allow read, write: if true;
+    }
+  }
+}

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { GlassCard } from '../components/common/GlassCard';
 import { Button } from '../components/common/Button';
 import { useAuth } from '../hooks/useAuth';
+import { useReports } from '../hooks/useReports';
 import { triggerHaptic } from '../telegram/webapp';
 import { getSystemSettings } from '../firebase/services/settingService';
 import { createPost, subscribeToRecruiterPosts, getRecruiterPosts, archiveOldPosts } from '../firebase/services/postService';
@@ -28,7 +29,8 @@ import {
   Sparkles,
   Timer,
   ShieldCheck,
-  AlertTriangle
+  AlertTriangle,
+  Target
 } from 'lucide-react';
 
 type SocialPlatform = 'Facebook' | 'X (Twitter)' | 'Instagram' | 'TikTok' | 'Threads' | 'WhatsApp' | 'Telegram' | 'Lainnya';
@@ -101,6 +103,7 @@ const CHANNELS = [
 
 export const PostinganPage: React.FC = () => {
   const { userProfile, telegramUser } = useAuth();
+  const { reports } = useReports();
   const [links, setLinks] = useState<SocialLink[]>([]);
   const [bulkText, setBulkText] = useState('');
   const [isReviewingLinks, setIsReviewingLinks] = useState(false);
@@ -113,15 +116,93 @@ export const PostinganPage: React.FC = () => {
   const [status, setStatus] = useState<{ type: 'idle' | 'success' | 'error'; message?: string }>({ type: 'idle' });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // View State
+  // View State & Post Count
   const [activeView, setActiveView] = useState<'buat' | 'hari_ini' | 'arsip'>('buat');
   const [posts, setPosts] = useState<BatchPost[]>([]);
+  const [todayPostingsCount, setTodayPostingsCount] = useState<number>(0);
   const [lastDoc, setLastDoc] = useState<any>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
   // Effective Telegram ID (resilient to page reload before userProfile finishes loading)
   const effectiveTelegramId = userProfile?.telegramId || (telegramUser?.id ? String(telegramUser.id) : '');
+
+  // Calculate recruits recorded in Data Harian today for this recruiter
+  const todayRecruits = useMemo(() => {
+    const today = getWIBDate();
+    const normalizeDate = (d: string) => {
+      if (!d) return '';
+      const parts = d.split('-');
+      if (parts.length !== 3) return d;
+      if (parts[0].length === 2) return parts.reverse().join('-');
+      return d;
+    };
+    const normalizedToday = normalizeDate(today);
+
+    const todayReports = reports.filter((r) => {
+      return r.telegramId === effectiveTelegramId && normalizeDate(r.date || '') === normalizedToday;
+    });
+
+    if (todayReports.length === 0) return 0;
+
+    return todayReports.reduce((sum, r) => {
+      const val = r.applicant !== undefined && r.applicant !== null ? Number(r.applicant) : 1;
+      return sum + (isNaN(val) ? 1 : val);
+    }, 0);
+  }, [reports, effectiveTelegramId]);
+
+  // Target posting rule calculation based on requirements:
+  // Target 3+ rekrutan/hari -> Posting: Bebas
+  // Target 2 rekrutan/hari  -> Posting: 30 postingan
+  // Target 1 rekrutan/hari  -> Posting: 60 postingan
+  // Target 0 rekrutan/hari  -> Posting: 90 postingan
+  const targetRule = useMemo(() => {
+    if (todayRecruits >= 3) {
+      return {
+        required: 0,
+        label: 'Bebas Posting',
+        badge: 'Bebas Posting 🎉',
+        color: 'from-emerald-500/20 to-teal-500/10 text-emerald-300 border-emerald-500/40',
+        iconColor: 'text-emerald-400',
+        isFree: true,
+        tierName: '3+ Rekrutan',
+        description: 'Selamat! Dengan 3+ rekrutan dari Data Harian, Anda bebas posting (tanpa batas minimal).'
+      };
+    } else if (todayRecruits === 2) {
+      return {
+        required: 30,
+        label: '30 Postingan',
+        badge: 'Target: 30 Posting',
+        color: 'from-sky-500/20 to-blue-500/10 text-sky-300 border-sky-500/40',
+        iconColor: 'text-sky-400',
+        isFree: false,
+        tierName: '2 Rekrutan',
+        description: 'Dengan 2 rekrutan dari Data Harian, target posting Anda adalah 30 postingan.'
+      };
+    } else if (todayRecruits === 1) {
+      return {
+        required: 60,
+        label: '60 Postingan',
+        badge: 'Target: 60 Posting',
+        color: 'from-amber-500/20 to-orange-500/10 text-amber-300 border-amber-500/40',
+        iconColor: 'text-amber-400',
+        isFree: false,
+        tierName: '1 Rekrutan',
+        description: 'Dengan 1 rekrutan dari Data Harian, target posting Anda adalah 60 postingan.'
+      };
+    } else {
+      return {
+        required: 90,
+        label: '90 Postingan',
+        badge: 'Target: 90 Posting',
+        color: 'from-rose-500/20 to-pink-500/10 text-rose-300 border-rose-500/40',
+        iconColor: 'text-rose-400',
+        isFree: false,
+        tierName: '0 Rekrutan',
+        description: 'Dengan 0 rekrutan dari Data Harian, target posting Anda adalah 90 postingan.'
+      };
+    }
+  }, [todayRecruits]);
 
   // Live countdown to midnight (00:00)
   const [timeRemainingMs, setTimeRemainingMs] = useState<number>(0);
@@ -209,8 +290,14 @@ export const PostinganPage: React.FC = () => {
         const today = getWIBDate();
         const normalizedToday = normalizeDate(today);
 
-        // Calculate next startNumber based on today's posts
-        const todayPosts = fetchedPosts.filter(p => normalizeDate(p.date || '') === normalizedToday);
+        // Calculate next startNumber and total posting links count today
+        const todayPosts = fetchedPosts.filter(p => normalizeDate(p.date || '') === normalizedToday && !p.archived);
+
+        const totalLinksToday = todayPosts.reduce((acc, post) => {
+          const linkCount = Array.isArray(post.links) ? post.links.length : 0;
+          return acc + linkCount;
+        }, 0);
+        setTodayPostingsCount(totalLinksToday);
 
         if (!hasUserEditedStartNumber) {
           if (todayPosts.length > 0) {
@@ -560,6 +647,139 @@ export const PostinganPage: React.FC = () => {
             animate={{ opacity: 1, x: 0 }}
             className="space-y-4"
           >
+            {/* Syarat Target Postingan Harian (Berpatokan Data Harian) */}
+            <GlassCard className="p-4 space-y-3.5 bg-slate-950/80 border-slate-800 shadow-xl relative overflow-hidden">
+              <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className={`w-9 h-9 rounded-2xl bg-gradient-to-br ${targetRule.color} flex items-center justify-center shrink-0 border shadow-inner`}>
+                    <Target className={`w-4 h-4 ${targetRule.iconColor}`} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-xs font-black text-white tracking-tight">Target Postingan Harian</h3>
+                      <span className="text-[8px] font-black uppercase text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-full border border-sky-500/20 flex items-center gap-1">
+                        <Sparkles className="w-2.5 h-2.5" /> Data Harian Sync
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 font-medium mt-0.5 leading-snug">
+                      {targetRule.description}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Realtime Status Banner */}
+              <div className="grid grid-cols-3 gap-2">
+                <div className="p-2.5 rounded-2xl bg-slate-900/90 border border-slate-800/80 text-center">
+                  <p className="text-[8px] font-black uppercase text-slate-500">Rekrutan Hari Ini</p>
+                  <p className="text-sm font-black text-emerald-400 mt-0.5">{todayRecruits} Orang</p>
+                </div>
+                <div className="p-2.5 rounded-2xl bg-slate-900/90 border border-slate-800/80 text-center">
+                  <p className="text-[8px] font-black uppercase text-slate-500">Target Posting</p>
+                  <p className={`text-sm font-black mt-0.5 ${targetRule.isFree ? 'text-emerald-300' : 'text-sky-400'}`}>
+                    {targetRule.label}
+                  </p>
+                </div>
+                <div className="p-2.5 rounded-2xl bg-slate-900/90 border border-slate-800/80 text-center">
+                  <p className="text-[8px] font-black uppercase text-slate-500">Telah Diposting</p>
+                  <p className="text-sm font-black text-white mt-0.5">
+                    {todayPostingsCount} {targetRule.isFree ? '' : `/ ${targetRule.required}`}
+                  </p>
+                </div>
+              </div>
+
+              {/* Progress Bar or Free Badge */}
+              {!targetRule.isFree ? (
+                <div className="space-y-1.5 pt-0.5">
+                  <div className="flex items-center justify-between text-[10px] font-bold">
+                    <span className="text-slate-400">Progres Target Hari Ini</span>
+                    <span className={todayPostingsCount >= targetRule.required ? 'text-emerald-400 font-black' : 'text-amber-400 font-black'}>
+                      {todayPostingsCount >= targetRule.required 
+                        ? '✅ Target Postingan Selesai' 
+                        : `Kurang ${targetRule.required - todayPostingsCount} postingan lagi`}
+                    </span>
+                  </div>
+                  <div className="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800 p-0.5">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(100, Math.round((todayPostingsCount / targetRule.required) * 100))}%` }}
+                      className={`h-full rounded-full ${
+                        todayPostingsCount >= targetRule.required 
+                          ? 'bg-gradient-to-r from-emerald-500 to-teal-400' 
+                          : 'bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500'
+                      }`}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[10px] font-bold flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    Bebas jumlah posting karena rekrutan hari ini sudah ≥ 3!
+                  </span>
+                  <span className="text-[9px] uppercase font-black bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+                    Selesai 🎉
+                  </span>
+                </div>
+              )}
+
+              {/* Syarat Rule Matrix Grid */}
+              <div className="pt-1.5 border-t border-slate-800/60">
+                <p className="text-[8px] font-black uppercase text-slate-500 tracking-wider mb-2">
+                  Ketentuan Target Postingan Harian:
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className={`p-2 rounded-xl border transition-all text-center ${
+                    todayRecruits === 0
+                      ? 'bg-rose-500/15 border-rose-500/50 text-white shadow-md shadow-rose-500/10'
+                      : 'bg-slate-900/40 border-slate-800/60 text-slate-400'
+                  }`}>
+                    <p className="text-[8px] font-black uppercase text-slate-400">0 Rekrutan</p>
+                    <p className="text-xs font-black text-rose-400 mt-0.5">90 Posting</p>
+                    {todayRecruits === 0 && (
+                      <span className="inline-block text-[7px] font-black uppercase bg-rose-500/20 text-rose-300 px-1.5 py-0.5 mt-1 rounded">Aktif Saat Ini</span>
+                    )}
+                  </div>
+
+                  <div className={`p-2 rounded-xl border transition-all text-center ${
+                    todayRecruits === 1
+                      ? 'bg-amber-500/15 border-amber-500/50 text-white shadow-md shadow-amber-500/10'
+                      : 'bg-slate-900/40 border-slate-800/60 text-slate-400'
+                  }`}>
+                    <p className="text-[8px] font-black uppercase text-slate-400">1 Rekrutan</p>
+                    <p className="text-xs font-black text-amber-400 mt-0.5">60 Posting</p>
+                    {todayRecruits === 1 && (
+                      <span className="inline-block text-[7px] font-black uppercase bg-amber-500/20 text-amber-300 px-1.5 py-0.5 mt-1 rounded">Aktif Saat Ini</span>
+                    )}
+                  </div>
+
+                  <div className={`p-2 rounded-xl border transition-all text-center ${
+                    todayRecruits === 2
+                      ? 'bg-sky-500/15 border-sky-500/50 text-white shadow-md shadow-sky-500/10'
+                      : 'bg-slate-900/40 border-slate-800/60 text-slate-400'
+                  }`}>
+                    <p className="text-[8px] font-black uppercase text-slate-400">2 Rekrutan</p>
+                    <p className="text-xs font-black text-sky-400 mt-0.5">30 Posting</p>
+                    {todayRecruits === 2 && (
+                      <span className="inline-block text-[7px] font-black uppercase bg-sky-500/20 text-sky-300 px-1.5 py-0.5 mt-1 rounded">Aktif Saat Ini</span>
+                    )}
+                  </div>
+
+                  <div className={`p-2 rounded-xl border transition-all text-center ${
+                    todayRecruits >= 3
+                      ? 'bg-emerald-500/15 border-emerald-500/50 text-white shadow-md shadow-emerald-500/10'
+                      : 'bg-slate-900/40 border-slate-800/60 text-slate-400'
+                  }`}>
+                    <p className="text-[8px] font-black uppercase text-slate-400">3+ Rekrutan</p>
+                    <p className="text-xs font-black text-emerald-400 mt-0.5">Bebas 🎉</p>
+                    {todayRecruits >= 3 && (
+                      <span className="inline-block text-[7px] font-black uppercase bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 mt-1 rounded">Aktif Saat Ini</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </GlassCard>
+
             {/* Header Info Section */}
             <div className="grid grid-cols-2 gap-2 px-1">
               <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-slate-900/40 border border-slate-800/50 backdrop-blur-sm">

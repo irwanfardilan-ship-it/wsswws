@@ -470,26 +470,13 @@ app.post('/api/telegram/send-report', async (req: Request, res: Response) => {
     const applicantTg = report.applicantTelegramUsername ? `@${report.applicantTelegramUsername.replace(/^@/, '')}` : '-';
 
     const captionHtml = `
-📊 <b>LAPORAN DATA HARIAN REKRUITER</b>
+UID : ${report.uid9Kucing || '-'}
+WA : ${report.applicantWhatsapp || '-'}
+Username Telegram : ${applicantTg}
+Rekomendasi dari : ${recUsername}
+Info dari sosmed : ${report.channel || '-'}
 
-👤 <b>Recruiter:</b> ${recUsername}
-📅 <b>Tanggal:</b> ${report.date || '-'}
-🏢 <b>Channel:</b> ${report.channel || '-'}
-
-📲 <b>WA Pelamar:</b> ${report.applicantWhatsapp || '-'}
-🐱 <b>UID 9Kucing:</b> ${report.uid9Kucing || '-'}
-✈️ <b>TG Pelamar:</b> ${applicantTg}
-🏷️ <b>Grup:</b> ${report.grup || 'T0'}
-📌 <b>Status:</b> ${report.result || 'Pending'}
-
-📊 <b>Statistik Hari Ini:</b>
-• Visit: ${report.visit || 0}
-• Apply: ${report.applicant || 0}
-• Quality: ${report.quality || 0}
-• Posting: ${report.posting || 0}
-• Izin: ${report.permission || 0}
-
-💬 <b>Catatan:</b> ${report.note || '-'}
+Grub : ${report.grup || '-'}
 `.trim();
 
     // Send video if available
@@ -547,9 +534,10 @@ app.post('/api/telegram/send-report', async (req: Request, res: Response) => {
     }
 
     // Text-only message fallback
+    const isDataUrl = videoDataUrl && typeof videoDataUrl === 'string' && videoDataUrl.startsWith('data:');
     const textPayload: Record<string, unknown> = {
       chat_id: targetGroup,
-      text: captionHtml + (videoDataUrl ? `\n\n📹 <b>Video Bukti:</b> ${videoDataUrl}` : ''),
+      text: captionHtml + (videoDataUrl && !isDataUrl ? `\n\n📹 <b>Video Bukti:</b> ${videoDataUrl}` : ''),
       parse_mode: 'HTML'
     };
     if (targetTopic) textPayload.message_thread_id = Number(targetTopic);

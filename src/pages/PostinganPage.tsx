@@ -733,149 +733,138 @@ export const PostinganPage: React.FC = () => {
                         })}
                       </div>
                       
-                      {!isConfirmed && (
-                        <div className="flex gap-2 animate-in fade-in zoom-in duration-300">
-                          <Button 
-                            variant="secondary" 
-                            fullWidth 
-                            className="py-3 h-auto text-[10px] font-black uppercase"
-                            onClick={() => {
-                              setIsReviewingLinks(false);
-                              setLinks([]);
-                              triggerHaptic('impact', 'light');
-                            }}
-                          >
-                            Ubah Link
-                          </Button>
-                          <Button 
-                            variant="primary" 
-                            fullWidth 
-                            className="py-3 h-auto text-[10px] font-black uppercase shadow-lg shadow-sky-500/20"
-                            onClick={() => {
-                              const hasDuplicates = links.some(link => links.filter(l => l.url === link.url).length > 1);
-                              if (hasDuplicates) {
-                                setStatus({ type: 'error', message: 'Mohon perbaiki link yang duplikat sebelum konfirmasi.' });
-                                triggerHaptic('notification', 'error');
-                                return;
-                              }
-                              setIsConfirmed(true);
-                              triggerHaptic('notification', 'success');
-                              const imageSection = document.getElementById('image-section');
-                              imageSection?.scrollIntoView({ behavior: 'smooth' });
-                            }}
-                          >
-                            Konfirmasi Data
-                          </Button>
-                        </div>
-                      )}
+                      <div className="flex gap-2 animate-in fade-in zoom-in duration-300">
+                        <Button 
+                          variant="secondary" 
+                          fullWidth 
+                          className="py-3 h-auto text-[10px] font-black uppercase"
+                          onClick={() => {
+                            setIsReviewingLinks(false);
+                            setLinks([]);
+                            setIsConfirmed(false);
+                            setImages([]);
+                            triggerHaptic('impact', 'light');
+                          }}
+                        >
+                          Ubah Link
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>
 
-                {/* Step 3: Visual Assets */}
-                <div id="image-section" className={`space-y-4 pt-2 transition-all duration-500 ${!isConfirmed ? 'opacity-30 pointer-events-none grayscale translate-y-4' : 'opacity-100 translate-y-0'}`}>
-                  <div className="flex items-center justify-between px-1">
-                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                      <ImageIcon className="w-4 h-4 text-sky-400" />
-                      Media Postingan ({images.length}/10)
-                    </label>
-                    <button 
-                      onClick={() => fileInputRef.current?.click()}
-                      className="text-[9px] font-black text-sky-400 hover:text-sky-300 flex items-center gap-1 transition-all uppercase bg-sky-500/10 px-3 py-1.5 rounded-xl border border-sky-500/20 active:scale-95"
-                    >
-                      <Plus className="w-3 h-3" /> Tambah
-                    </button>
-                  </div>
-
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleImageUpload}
-                  multiple
-                  accept="image/*"
-                  className="hidden"
-                />
-
-                {images.length === 0 ? (
-                  <div 
-                    onClick={() => fileInputRef.current?.click()}
-                    className="group cursor-pointer aspect-video rounded-3xl border-2 border-dashed border-slate-800 hover:border-sky-500/30 bg-slate-950/30 flex flex-col items-center justify-center gap-3 transition-all active:scale-[0.98]"
-                  >
-                    <div className="w-12 h-12 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500 group-hover:text-sky-400 group-hover:border-sky-500/30 transition-colors shadow-lg">
-                      <Upload className="w-6 h-6" />
-                    </div>
-                    <div className="text-center">
-                      <p className="text-xs font-bold text-slate-300 group-hover:text-white">Klik untuk upload gambar</p>
-                      <p className="text-[10px] text-slate-600 font-medium mt-1">Maksimal 10 gambar per batch</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    <AnimatePresence mode="popLayout">
-                      {images.map((img, idx) => (
-                        <motion.div
-                          key={`${idx}-${img.substring(0, 20)}`}
-                          layout
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.8 }}
-                          className="relative aspect-square rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 group shadow-md"
-                        >
-                          <img src={img} alt="Preview" className="w-full h-full object-cover" />
-                          <button
-                            onClick={() => removeImage(idx)}
-                            className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60 backdrop-blur-md text-white flex items-center justify-center hover:bg-rose-500 transition-colors z-10"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </motion.div>
-                      ))}
-                    </AnimatePresence>
-                    
-                    {images.length < 10 && (
-                      <button
-                        onClick={() => fileInputRef.current?.click()}
-                        className="aspect-square rounded-2xl border-2 border-dashed border-slate-800 hover:border-sky-500/30 bg-slate-950/30 flex flex-col items-center justify-center gap-1.5 transition-all text-slate-500 hover:text-sky-400 group"
-                      >
-                        <Plus className="w-6 h-6 group-hover:scale-110 transition-transform" />
-                        <span className="text-[10px] font-black uppercase tracking-tighter">Tambah</span>
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <AnimatePresence>
-                {status.type !== 'idle' && (
+                {/* Step 3: Visual Assets - Only shown after previewing links */}
+                {isReviewingLinks && (
                   <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className={`p-4 rounded-2xl flex items-center gap-3 ${
-                      status.type === 'success' 
-                        ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' 
-                        : 'bg-rose-500/10 border border-rose-500/20 text-rose-400'
-                    }`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="space-y-6 pt-2 border-t border-slate-800/60"
                   >
-                    {status.type === 'success' ? (
-                      <CheckCircle2 className="w-5 h-5 shrink-0" />
-                    ) : (
-                      <AlertCircle className="w-5 h-5 shrink-0" />
-                    )}
-                    <p className="text-xs font-black leading-tight">{status.message}</p>
+                    <div id="image-section" className="space-y-4">
+                      <div className="flex items-center justify-between px-1">
+                        <label className="text-[11px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                          <ImageIcon className="w-4 h-4 text-sky-400" />
+                          Media Postingan ({images.length}/10)
+                        </label>
+                        <button 
+                          onClick={() => fileInputRef.current?.click()}
+                          className="text-[9px] font-black text-sky-400 hover:text-sky-300 flex items-center gap-1 transition-all uppercase bg-sky-500/10 px-3 py-1.5 rounded-xl border border-sky-500/20 active:scale-95"
+                        >
+                          <Plus className="w-3 h-3" /> Tambah
+                        </button>
+                      </div>
+
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleImageUpload}
+                        multiple
+                        accept="image/*"
+                        className="hidden"
+                      />
+
+                      {images.length === 0 ? (
+                        <div 
+                          onClick={() => fileInputRef.current?.click()}
+                          className="group cursor-pointer aspect-video rounded-3xl border-2 border-dashed border-slate-800 hover:border-sky-500/30 bg-slate-950/30 flex flex-col items-center justify-center gap-3 transition-all active:scale-[0.98]"
+                        >
+                          <div className="w-12 h-12 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500 group-hover:text-sky-400 group-hover:border-sky-500/30 transition-colors shadow-lg">
+                            <Upload className="w-6 h-6" />
+                          </div>
+                          <div className="text-center">
+                            <p className="text-xs font-bold text-slate-300 group-hover:text-white">Klik untuk upload gambar</p>
+                            <p className="text-[10px] text-slate-600 font-medium mt-1">Maksimal 10 gambar per batch</p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          <AnimatePresence mode="popLayout">
+                            {images.map((img, idx) => (
+                              <motion.div
+                                key={`${idx}-${img.substring(0, 20)}`}
+                                layout
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                className="relative aspect-square rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 group shadow-md"
+                              >
+                                <img src={img} alt="Preview" className="w-full h-full object-cover" />
+                                <button
+                                  onClick={() => removeImage(idx)}
+                                  className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60 backdrop-blur-md text-white flex items-center justify-center hover:bg-rose-500 transition-colors z-10"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              </motion.div>
+                            ))}
+                          </AnimatePresence>
+                          
+                          {images.length < 10 && (
+                            <button
+                              onClick={() => fileInputRef.current?.click()}
+                              className="aspect-square rounded-2xl border-2 border-dashed border-slate-800 hover:border-sky-500/30 bg-slate-950/30 flex flex-col items-center justify-center gap-1.5 transition-all text-slate-500 hover:text-sky-400 group"
+                            >
+                              <Plus className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                              <span className="text-[10px] font-black uppercase tracking-tighter">Tambah</span>
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <AnimatePresence>
+                      {status.type !== 'idle' && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className={`p-4 rounded-2xl flex items-center gap-3 ${
+                            status.type === 'success' 
+                              ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' 
+                              : 'bg-rose-500/10 border border-rose-500/20 text-rose-400'
+                          }`}
+                        >
+                          {status.type === 'success' ? (
+                            <CheckCircle2 className="w-5 h-5 shrink-0" />
+                          ) : (
+                            <AlertCircle className="w-5 h-5 shrink-0" />
+                          )}
+                          <p className="text-xs font-black leading-tight">{status.message}</p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    <Button
+                      fullWidth
+                      onClick={handleSubmit}
+                      disabled={isUploading || links.filter(l => l.url.trim() !== '').length === 0 || images.length === 0}
+                      isLoading={isUploading}
+                      icon={<Send className="w-4 h-4" />}
+                    >
+                      Kirim Batch Postingan
+                    </Button>
                   </motion.div>
                 )}
-              </AnimatePresence>
-
-              <Button
-                fullWidth
-                onClick={handleSubmit}
-                disabled={isUploading || links.filter(l => l.url.trim() !== '').length === 0 || images.length === 0}
-                isLoading={isUploading}
-                icon={<Send className="w-4 h-4" />}
-              >
-                Kirim Batch Postingan
-              </Button>
             </GlassCard>
             </div>
           </motion.div>

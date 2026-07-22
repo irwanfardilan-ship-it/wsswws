@@ -106,6 +106,7 @@ export const PostinganPage: React.FC = () => {
   const [isReviewingLinks, setIsReviewingLinks] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [startNumber, setStartNumber] = useState<number>(1);
+  const [hasUserEditedStartNumber, setHasUserEditedStartNumber] = useState(false);
   const [images, setImages] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [settings, setSettings] = useState<SystemSettings | null>(null);
@@ -118,6 +119,9 @@ export const PostinganPage: React.FC = () => {
   const [lastDoc, setLastDoc] = useState<any>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+
+  // Effective Telegram ID (resilient to page reload before userProfile finishes loading)
+  const effectiveTelegramId = userProfile?.telegramId || (telegramUser?.id ? String(telegramUser.id) : '');
 
   // Live countdown to midnight (00:00)
   const [timeRemainingMs, setTimeRemainingMs] = useState<number>(0);
@@ -178,43 +182,21 @@ export const PostinganPage: React.FC = () => {
       const s = await getSystemSettings();
       setSettings(s);
       await archiveOldPosts(); // Auto archive old posts on mount
-      
-      // Auto-calculate next startNumber based on today's posts
-      if (userProfile?.telegramId) {
-        const { posts: todayPosts } = await getRecruiterPosts(userProfile.telegramId, 50);
-        const today = getWIBDate();
-        const normalizeDate = (d: string) => {
-          if (!d) return '';
-          const parts = d.split('-');
-          if (parts.length !== 3) return d;
-          if (parts[0].length === 2) return parts.reverse().join('-');
-          return d;
-        };
-        const normalizedToday = normalizeDate(today);
-        
-        const currentTodayPosts = todayPosts.filter(p => normalizeDate(p.date || '') === normalizedToday);
-        if (currentTodayPosts.length > 0) {
-          // Find the highest number used so far
-          const lastPost = currentTodayPosts[0]; // Already ordered by createdAt desc
-          const nextNum = (lastPost.startNumber || 1) + (lastPost.links?.length || 0);
-          setStartNumber(nextNum);
-        }
-      }
 
       if (activeView === 'hari_ini') {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     };
     init();
-  }, [userProfile?.telegramId]); // Only run on mount or profile change
+  }, []);
 
-  // Real-time listener for posts
+  // Real-time listener for posts & automatic next startNumber calculation
   useEffect(() => {
-    if (!userProfile?.telegramId) return;
+    if (!effectiveTelegramId) return;
 
     setIsLoadingHistory(true);
     const unsubscribe = subscribeToRecruiterPosts(
-      userProfile.telegramId,
+      effectiveTelegramId,
       (fetchedPosts) => {
         const normalizeDate = (d: string) => {
           if (!d) return '';
@@ -226,12 +208,32 @@ export const PostinganPage: React.FC = () => {
 
         const today = getWIBDate();
         const normalizedToday = normalizeDate(today);
-        
-        // Filter based on active view
+
+        // Calculate next startNumber based on today's posts
+        const todayPosts = fetchedPosts.filter(p => normalizeDate(p.date || '') === normalizedToday);
+
+        if (!hasUserEditedStartNumber) {
+          if (todayPosts.length > 0) {
+            let maxNextNum = 1;
+            for (const post of todayPosts) {
+              const pStart = Number(post.startNumber) || 1;
+              const linkCount = Array.isArray(post.links) ? post.links.length : 0;
+              const pEnd = pStart + linkCount;
+              if (pEnd > maxNextNum) {
+                maxNextNum = pEnd;
+              }
+            }
+            setStartNumber(maxNextNum);
+          } else {
+            setStartNumber(1);
+          }
+        }
+
+        // Filter based on active view for tab display
         const filtered = fetchedPosts.filter(p => {
           const pDate = normalizeDate(p.date || '');
           const isToday = pDate === normalizedToday;
-          
+
           if (activeView === 'hari_ini') {
             return isToday && !p.archived;
           } else if (activeView === 'arsip') {
@@ -242,13 +244,13 @@ export const PostinganPage: React.FC = () => {
 
         setPosts(filtered);
         setIsLoadingHistory(false);
-        setHasMore(false); // Snapshots handle entire limit
+        setHasMore(false);
       },
       100
     );
 
     return () => unsubscribe();
-  }, [userProfile?.telegramId, activeView]);
+  }, [effectiveTelegramId, activeView, hasUserEditedStartNumber]);
 
   const fetchHistory = async (reset: boolean = false) => {
     // Legacy fetch logic replaced by onSnapshot
@@ -362,8 +364,16 @@ export const PostinganPage: React.FC = () => {
     }
 
     // Duplicate Check
+    const normalizeDate = (d: string) => {
+      if (!d) return '';
+      const parts = d.split('-');
+      if (parts.length !== 3) return d;
+      if (parts[0].length === 2) return parts.reverse().join('-');
+      return d;
+    };
     const today = getWIBDate();
-    const todayPosts = posts.filter(p => p.date === today);
+    const normalizedToday = normalizeDate(today);
+    const todayPosts = posts.filter(p => normalizeDate(p.date || '') === normalizedToday);
     const existingLinks = new Set(todayPosts.flatMap(p => p.links));
     
     const duplicates = validLinks.filter(l => existingLinks.has(l.url));
@@ -381,8 +391,9 @@ export const PostinganPage: React.FC = () => {
     triggerHaptic('impact', 'medium');
 
     try {
-      const recruiterName = `${userProfile?.firstName} ${userProfile?.lastName || ''}`.trim();
-      const recruiterUsername = userProfile?.username || telegramUser?.username;
+      const recruiterName = userProfile ? `${userProfile.firstName} ${userProfile.lastName || ''}`.trim() : `${telegramUser?.first_name || ''} ${telegramUser?.last_name || ''}`.trim() || 'Recruiter';
+      const recruiterUsername = userProfile?.username || telegramUser?.username || '';
+      const recruiterTelegramId = effectiveTelegramId;
       
       // Compress all images
       setStatus({ type: 'idle', message: 'Sedang mengompres gambar...' });
@@ -417,8 +428,8 @@ export const PostinganPage: React.FC = () => {
       const result = await response.json();
       if (result.success) {
         const newPostData = {
-          telegramId: userProfile?.telegramId || '',
-          username: recruiterUsername || '',
+          telegramId: recruiterTelegramId,
+          username: recruiterUsername,
           name: recruiterName,
           date: getWIBDate(),
           startNumber,
@@ -435,6 +446,7 @@ export const PostinganPage: React.FC = () => {
         setIsReviewingLinks(false);
         setIsConfirmed(false);
         setImages([]);
+        setHasUserEditedStartNumber(false);
         setStartNumber(prev => prev + validLinks.length);
         triggerHaptic('notification', 'success');
         
@@ -582,7 +594,10 @@ export const PostinganPage: React.FC = () => {
                   <input
                     type="number"
                     value={startNumber}
-                    onChange={(e) => setStartNumber(parseInt(e.target.value) || 1)}
+                    onChange={(e) => {
+                      setStartNumber(parseInt(e.target.value) || 1);
+                      setHasUserEditedStartNumber(true);
+                    }}
                     className="w-full p-2 rounded-xl bg-slate-900 border border-slate-800 text-white font-black text-center text-base outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 transition-all"
                   />
                 </GlassCard>

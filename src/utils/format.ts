@@ -98,3 +98,54 @@ export function getWIBMonday(offsetDays: number = 0): string {
   const date = String(d.getDate()).padStart(2, '0');
   return `${year}-${month}-${date}`;
 }
+
+export interface WIBWeekDayInfo {
+  dayName: 'Senin' | 'Selasa' | 'Rabu' | 'Kamis' | 'Jumat' | 'Sabtu' | 'Minggu';
+  dateStr: string; // YYYY-MM-DD
+  displayDate: string; // DD/MM
+  isToday: boolean;
+}
+
+export function getWIBCurrentWeekDays(): WIBWeekDayInfo[] {
+  const mondayStr = getWIBMonday(0);
+  const [y, m, d] = mondayStr.split('-').map(Number);
+  const baseDate = new Date(y, m - 1, d);
+  const todayStr = getWIBDate();
+  
+  const dayNames: ('Senin' | 'Selasa' | 'Rabu' | 'Kamis' | 'Jumat' | 'Sabtu' | 'Minggu')[] = [
+    'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'
+  ];
+
+  return dayNames.map((name, idx) => {
+    const cur = new Date(baseDate);
+    cur.setDate(baseDate.getDate() + idx);
+    const year = cur.getFullYear();
+    const month = String(cur.getMonth() + 1).padStart(2, '0');
+    const day = String(cur.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
+    
+    return {
+      dayName: name,
+      dateStr,
+      displayDate: `${day}/${month}`,
+      isToday: dateStr === todayStr
+    };
+  });
+}
+
+export function getIndonesianDayName(dateStr: string): string {
+  if (!dateStr) return '';
+  const normalize = (s: string) => {
+    const parts = s.split('-');
+    if (parts.length !== 3) return s;
+    if (parts[0].length === 2) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    return s;
+  };
+  const norm = normalize(dateStr);
+  const [y, m, d] = norm.split('-').map(Number);
+  if (!y || !m || !d) return '';
+  const dt = new Date(y, m - 1, d);
+  const dayIdx = dt.getDay(); // 0=Minggu, 1=Senin, 2=Selasa, 3=Rabu, 4=Kamis, 5=Jumat, 6=Sabtu
+  const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+  return days[dayIdx] || '';
+}

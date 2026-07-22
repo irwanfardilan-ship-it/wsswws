@@ -16,7 +16,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../config';
 import { BatchPost } from '../../types';
-import { getWIBDate } from '../../utils/format';
+import { getWIBDate, getWIBMonday } from '../../utils/format';
 import { handleFirestoreError, OperationType } from '../error';
 
 const POSTS_COLLECTION = 'posts';
@@ -95,7 +95,7 @@ export const subscribeToRecruiterPosts = (
 };
 
 export const archiveOldPosts = async () => {
-  const today = getWIBDate(); // YYYY-MM-DD
+  const currentMonday = getWIBMonday(0); // YYYY-MM-DD of current week's Monday
   
   const normalizeDate = (d: string) => {
     if (!d) return '';
@@ -104,8 +104,6 @@ export const archiveOldPosts = async () => {
     if (parts[0].length === 2) return parts.reverse().join('-');
     return d;
   };
-  
-  const normalizedToday = normalizeDate(today);
 
   try {
     // Get all potentially unarchived posts
@@ -119,7 +117,7 @@ export const archiveOldPosts = async () => {
     const promises = snapshot.docs
       .filter(d => {
         const pDate = normalizeDate(d.data().date || '');
-        return pDate < normalizedToday;
+        return pDate < currentMonday;
       })
       .map(d => updateDoc(doc(db, POSTS_COLLECTION, d.id), { archived: true }));
       

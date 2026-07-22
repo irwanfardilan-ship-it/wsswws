@@ -8,7 +8,7 @@ import { triggerHaptic } from '../telegram/webapp';
 import { getSystemSettings } from '../firebase/services/settingService';
 import { createPost, subscribeToRecruiterPosts, getRecruiterPosts, archiveOldPosts } from '../firebase/services/postService';
 import { SystemSettings, BatchPost } from '../types';
-import { getWIBDate, getWIBMonday, getWIBCurrentWeekDays, getIndonesianDayName } from '../utils/format';
+import { getWIBDate, getWIBMonday, getWIBCurrentWeekDays, getIndonesianDayName, formatDateWithDay } from '../utils/format';
 import { 
   Image as ImageIcon, 
   X, 
@@ -23,6 +23,7 @@ import {
   History,
   Archive,
   ChevronRight,
+  ChevronLeft,
   ExternalLink,
   Calendar,
   Clock,
@@ -126,6 +127,24 @@ export const PostinganPage: React.FC = () => {
   const [lastDoc, setLastDoc] = useState<any>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+
+  // Pagination State (10 items per page)
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const ITEMS_PER_PAGE = 10;
+
+  // Reset pagination when tab view or day filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeView, selectedDay]);
+
+  const totalPages = useMemo(() => {
+    return Math.max(1, Math.ceil(posts.length / ITEMS_PER_PAGE));
+  }, [posts.length]);
+
+  const paginatedPosts = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return posts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [posts, currentPage]);
 
   // Get current WIB week days (Senin - Minggu)
   const weekDays = useMemo(() => getWIBCurrentWeekDays(), []);
@@ -1229,28 +1248,29 @@ export const PostinganPage: React.FC = () => {
                 </p>
               </div>
             ) : (
-              posts.map((post) => (
+              paginatedPosts.map((post) => (
                 <GlassCard key={post.id} className={`p-4 space-y-3 ${post.archived ? 'opacity-70 grayscale-[0.3]' : ''}`}>
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-xs font-black text-white">#{post.startNumber} - #{post.startNumber + post.links.length - 1}</span>
-                        <span className="px-2 py-0.5 rounded-full text-[8px] font-black uppercase bg-sky-500/15 text-sky-300 border border-sky-500/30 flex items-center gap-1">
+                        <span className="px-2.5 py-0.5 rounded-full text-[8.5px] font-black uppercase bg-sky-500/15 text-sky-300 border border-sky-500/30 flex items-center gap-1 shadow-sm">
                           <Calendar className="w-2.5 h-2.5 text-sky-400" />
-                          {getIndonesianDayName(post.date || '') || 'Hari'} {post.date ? `(${post.date.split('-').reverse().slice(0, 2).join('/')})` : ''}
+                          {formatDateWithDay(post.date || '') || post.date}
                         </span>
                         {post.archived && (
-                          <span className="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-slate-800 text-slate-500 border border-slate-700 flex items-center gap-1">
+                          <span className="px-2 py-0.5 rounded-full text-[8px] font-black uppercase bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                            <Archive className="w-2.5 h-2.5 text-amber-400" />
                             Arsip
                           </span>
                         )}
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-bold">
+                        <div className="flex items-center gap-1.5 text-[10px] text-slate-300 font-bold">
                           <Calendar className="w-3 h-3 text-sky-400" />
-                          {post.date}
+                          {formatDateWithDay(post.date || '') || post.date}
                         </div>
-                        <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-bold">
+                        <div className="flex items-center gap-1.5 text-[10px] text-slate-300 font-bold">
                           <LinkIcon className="w-3 h-3 text-sky-400" />
                           {post.links.length} Item
                         </div>
@@ -1293,22 +1313,79 @@ export const PostinganPage: React.FC = () => {
               ))
             )}
 
-            {hasMore && posts.length > 0 && (
-              <button
-                onClick={() => fetchHistory()}
-                disabled={isLoadingHistory}
-                className="w-full p-4 rounded-2xl bg-slate-900/50 border border-slate-800 text-xs font-black text-slate-400 hover:text-white transition-all flex items-center justify-center gap-2"
-              >
-                {isLoadingHistory ? (
-                  <X className="w-4 h-4 animate-spin" />
-                ) : (
-                  <>
-                    Lihat Lebih Banyak
-                    <ChevronRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
+            {/* Pagination Controls (10 item per halaman) */}
+            {posts.length > 0 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 rounded-2xl bg-slate-950/90 border border-slate-800/90 shadow-2xl mt-4">
+                <div className="text-[10px] font-bold text-slate-400 text-center sm:text-left">
+                  Menampilkan <span className="text-white font-black">{Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, posts.length)} - {Math.min(currentPage * ITEMS_PER_PAGE, posts.length)}</span> dari <span className="text-white font-black">{posts.length}</span> postingan
+                </div>
+                
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => {
+                      if (currentPage > 1) {
+                        setCurrentPage(prev => prev - 1);
+                        triggerHaptic('selection');
+                      }
+                    }}
+                    disabled={currentPage === 1}
+                    className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase transition-all flex items-center gap-1 border ${
+                      currentPage === 1
+                        ? 'bg-slate-900/40 text-slate-600 border-slate-800/40 cursor-not-allowed'
+                        : 'bg-slate-900 text-sky-400 border-slate-700 hover:bg-slate-800 hover:text-white shadow-sm'
+                    }`}
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                    Prev
+                  </button>
+
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                      .map((p, idx, arr) => {
+                        const showDots = idx > 0 && p - arr[idx - 1] > 1;
+                        return (
+                          <React.Fragment key={p}>
+                            {showDots && <span className="text-slate-600 text-[10px] px-0.5">..</span>}
+                            <button
+                              onClick={() => {
+                                setCurrentPage(p);
+                                triggerHaptic('selection');
+                              }}
+                              className={`w-7 h-7 rounded-xl text-[10px] font-black transition-all border ${
+                                currentPage === p
+                                  ? 'bg-sky-500 text-slate-950 border-sky-400 shadow-md shadow-sky-500/20'
+                                  : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                              }`}
+                            >
+                              {p}
+                            </button>
+                          </React.Fragment>
+                        );
+                      })}
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      if (currentPage < totalPages) {
+                        setCurrentPage(prev => prev + 1);
+                        triggerHaptic('selection');
+                      }
+                    }}
+                    disabled={currentPage === totalPages}
+                    className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase transition-all flex items-center gap-1 border ${
+                      currentPage === totalPages
+                        ? 'bg-slate-900/40 text-slate-600 border-slate-800/40 cursor-not-allowed'
+                        : 'bg-slate-900 text-sky-400 border-slate-700 hover:bg-slate-800 hover:text-white shadow-sm'
+                    }`}
+                  >
+                    Next
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
             )}
+
           </motion.div>
         )}
       </div>

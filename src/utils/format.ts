@@ -159,3 +159,25 @@ export function getIndonesianDayName(dateStr: string): string {
     return '';
   }
 }
+
+export function formatDateWithDay(dateStr: string): string {
+  if (!dateStr) return '';
+  const dayName = getIndonesianDayName(dateStr);
+  try {
+    const clean = dateStr.split('T')[0].split(' ')[0].replace(/\//g, '-');
+    const parts = clean.split('-');
+    let formattedDate = dateStr;
+    if (parts.length === 3) {
+      if (parts[0].length === 4) {
+        // YYYY-MM-DD -> DD/MM/YYYY
+        formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+      } else if (parts[2].length === 4) {
+        // DD-MM-YYYY -> DD/MM/YYYY
+        formattedDate = `${parts[0]}/${parts[1]}/${parts[2]}`;
+      }
+    }
+    return dayName ? `${dayName}, ${formattedDate}` : formattedDate;
+  } catch {
+    return dateStr;
+  }
+}

@@ -1143,33 +1143,44 @@ export const PostinganPage: React.FC = () => {
             className="space-y-3"
           >
             {activeView === 'minggu_ini' && (
-              <div className="space-y-2.5 p-3 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-xl">
-                <div className="flex items-center justify-between px-1">
-                  <div className="flex items-center gap-2 text-xs font-black text-white">
-                    <Calendar className="w-4 h-4 text-sky-400" />
-                    <span>Filter Hari (Minggu Ini)</span>
+              <div className="space-y-3 p-3.5 rounded-2xl bg-slate-950/90 border border-slate-800/90 shadow-2xl">
+                <div className="flex items-center justify-between px-0.5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center shrink-0">
+                      <Calendar className="w-3.5 h-3.5 text-sky-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-black text-white tracking-tight">Filter Hari Minggu Ini</h3>
+                      <p className="text-[9px] text-slate-400 font-medium">
+                        {weekDays[0]?.displayDate} - {weekDays[6]?.displayDate}
+                      </p>
+                    </div>
                   </div>
-                  <span className="text-[9px] font-black text-sky-400 bg-sky-500/10 px-2.5 py-0.5 rounded-full border border-sky-500/20">
-                    {weekPostsCountMap['Semua']} Link Total
-                  </span>
+                  <div className="text-right">
+                    <span className="text-[9px] font-black text-sky-300 bg-sky-500/15 px-2.5 py-1 rounded-full border border-sky-500/30">
+                      {weekPostsCountMap['Semua'] || 0} Link Total
+                    </span>
+                  </div>
                 </div>
 
-                {/* Day Buttons Horizontal Scroll */}
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 custom-scrollbar no-scrollbar">
+                {/* Day Buttons Grid Layout (Semua + 7 Hari) */}
+                <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5">
+                  {/* All Days Tile */}
                   <button
                     onClick={() => { setSelectedDay('Semua'); triggerHaptic('selection'); }}
-                    className={`shrink-0 px-3 py-2 rounded-xl text-[10px] font-black uppercase transition-all flex flex-col items-center gap-0.5 border ${
+                    className={`p-2 rounded-xl text-center transition-all flex flex-col items-center justify-center gap-0.5 border relative ${
                       selectedDay === 'Semua'
-                        ? 'bg-sky-500/20 text-sky-300 border-sky-500/40 shadow-md shadow-sky-500/10'
-                        : 'bg-slate-900/80 text-slate-400 border-slate-800 hover:text-white'
+                        ? 'bg-gradient-to-b from-sky-500/30 to-blue-600/20 text-white border-sky-400 shadow-lg shadow-sky-500/15 ring-1 ring-sky-400/50'
+                        : 'bg-slate-900/90 text-slate-400 border-slate-800 hover:text-white hover:bg-slate-800/80'
                     }`}
                   >
-                    <span>Semua Hari</span>
-                    <span className="text-[8px] font-bold opacity-80">
+                    <span className="text-[9px] font-black uppercase tracking-wider">Semua</span>
+                    <span className="text-[8px] font-bold text-sky-400 bg-sky-500/10 px-1.5 py-0.2 rounded-full border border-sky-500/20">
                       {weekPostsCountMap['Semua'] || 0} Link
                     </span>
                   </button>
 
+                  {/* Monday - Sunday Tiles */}
                   {weekDays.map((wDay) => {
                     const isSelected = selectedDay === wDay.dayName;
                     const linkCount = weekPostsCountMap[wDay.dayName] || 0;
@@ -1177,22 +1188,29 @@ export const PostinganPage: React.FC = () => {
                       <button
                         key={wDay.dayName}
                         onClick={() => { setSelectedDay(wDay.dayName); triggerHaptic('selection'); }}
-                        className={`shrink-0 px-3 py-2 rounded-xl text-[10px] font-black uppercase transition-all flex flex-col items-center gap-0.5 border relative ${
+                        className={`p-2 rounded-xl text-center transition-all flex flex-col items-center justify-center gap-0.5 border relative ${
                           isSelected
-                            ? 'bg-sky-500/20 text-sky-300 border-sky-500/40 shadow-md shadow-sky-500/10'
+                            ? 'bg-gradient-to-b from-sky-500/30 to-blue-600/20 text-white border-sky-400 shadow-lg shadow-sky-500/15 ring-1 ring-sky-400/50'
                             : wDay.isToday
-                            ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
-                            : 'bg-slate-900/80 text-slate-400 border-slate-800 hover:text-white'
+                            ? 'bg-amber-500/10 text-amber-200 border-amber-500/40 shadow-sm'
+                            : 'bg-slate-900/90 text-slate-400 border-slate-800 hover:text-white hover:bg-slate-800/80'
                         }`}
                       >
                         {wDay.isToday && (
-                          <span className="absolute -top-1.5 -right-1 text-[7px] font-black uppercase bg-amber-500 text-slate-950 px-1 py-0.2 rounded-full border border-amber-400 shadow-sm">
+                          <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 text-[6px] font-black uppercase bg-amber-400 text-slate-950 px-1.5 py-0.2 rounded-full border border-amber-300 shadow-sm tracking-tighter shrink-0 whitespace-nowrap">
                             Hari Ini
                           </span>
                         )}
-                        <span>{wDay.dayName}</span>
-                        <span className="text-[8px] font-bold opacity-80">
-                          {wDay.displayDate} • {linkCount} Link
+                        <span className="text-[9px] font-black uppercase tracking-wider mt-0.5">{wDay.dayName}</span>
+                        <span className="text-[7.5px] font-medium opacity-70">{wDay.displayDate}</span>
+                        <span className={`text-[8px] font-bold px-1.5 py-0.2 rounded-full border ${
+                          isSelected 
+                            ? 'text-sky-300 bg-sky-500/20 border-sky-400/30' 
+                            : linkCount > 0
+                            ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+                            : 'text-slate-500 bg-slate-950/40 border-slate-800'
+                        }`}>
+                          {linkCount} Link
                         </span>
                       </button>
                     );
@@ -1215,10 +1233,11 @@ export const PostinganPage: React.FC = () => {
                 <GlassCard key={post.id} className={`p-4 space-y-3 ${post.archived ? 'opacity-70 grayscale-[0.3]' : ''}`}>
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-xs font-black text-white">#{post.startNumber} - #{post.startNumber + post.links.length - 1}</span>
-                        <span className="px-2 py-0.5 rounded text-[8px] font-black uppercase bg-sky-500/10 text-sky-300 border border-sky-500/20">
-                          {getIndonesianDayName(post.date || '') || 'Hari'}
+                        <span className="px-2 py-0.5 rounded-full text-[8px] font-black uppercase bg-sky-500/15 text-sky-300 border border-sky-500/30 flex items-center gap-1">
+                          <Calendar className="w-2.5 h-2.5 text-sky-400" />
+                          {getIndonesianDayName(post.date || '') || 'Hari'} {post.date ? `(${post.date.split('-').reverse().slice(0, 2).join('/')})` : ''}
                         </span>
                         {post.archived && (
                           <span className="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-slate-800 text-slate-500 border border-slate-700 flex items-center gap-1">

@@ -135,17 +135,27 @@ export function getWIBCurrentWeekDays(): WIBWeekDayInfo[] {
 
 export function getIndonesianDayName(dateStr: string): string {
   if (!dateStr) return '';
-  const normalize = (s: string) => {
-    const parts = s.split('-');
-    if (parts.length !== 3) return s;
-    if (parts[0].length === 2) return `${parts[2]}-${parts[1]}-${parts[0]}`;
-    return s;
-  };
-  const norm = normalize(dateStr);
-  const [y, m, d] = norm.split('-').map(Number);
-  if (!y || !m || !d) return '';
-  const dt = new Date(y, m - 1, d);
-  const dayIdx = dt.getDay(); // 0=Minggu, 1=Senin, 2=Selasa, 3=Rabu, 4=Kamis, 5=Jumat, 6=Sabtu
-  const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-  return days[dayIdx] || '';
+  try {
+    const clean = dateStr.split('T')[0].split(' ')[0].replace(/\//g, '-');
+    const parts = clean.split('-');
+    if (parts.length !== 3) return '';
+
+    let year = Number(parts[0]);
+    let month = Number(parts[1]);
+    let day = Number(parts[2]);
+
+    if (parts[0].length === 2 && parts[2].length === 4) {
+      day = Number(parts[0]);
+      month = Number(parts[1]);
+      year = Number(parts[2]);
+    }
+
+    if (!year || !month || !day || isNaN(year) || isNaN(month) || isNaN(day)) return '';
+    const dt = new Date(year, month - 1, day);
+    const dayIdx = dt.getDay(); // 0=Minggu, 1=Senin, 2=Selasa, 3=Rabu, 4=Kamis, 5=Jumat, 6=Sabtu
+    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    return days[dayIdx] || '';
+  } catch {
+    return '';
+  }
 }

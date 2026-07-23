@@ -1,12 +1,6 @@
 import { ApiResponse } from '../types';
 
-const isCapacitor = typeof window !== 'undefined' && ((window as any).Capacitor || (window as any).webkit || navigator.userAgent.includes('Android') || navigator.userAgent.includes('Capacitor'));
-const isLocalAndroid = typeof window !== 'undefined' && (window.location.hostname === 'localhost' && (window.location.port === '' || window.location.port === '80' || window.location.port === '443'));
-
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 
-  ((isCapacitor || isLocalAndroid) 
-    ? 'https://ais-dev-zbqn5b46dflqymdy6ajpnm-268860382066.asia-east1.run.app' 
-    : '');
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'https://wsswws.vercel.app';
 
 export async function verifyTelegramInitDataApi(initData: string): Promise<ApiResponse<{
   token: string;

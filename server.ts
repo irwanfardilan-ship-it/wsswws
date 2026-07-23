@@ -238,6 +238,54 @@ app.post('/api/telegram/webhook', async (req: Request, res: Response) => {
     // Process standard messages
     const msg = message || edited_message || channel_post || edited_channel_post;
     
+    if (msg && msg.text && msg.text.startsWith('/start')) {
+      const chatId = msg.chat.id;
+      const threadId = msg.message_thread_id;
+      const firstName = msg.from?.first_name || 'Teman';
+      
+      let responseText = `👋 <b>Halo, ${firstName}! Selamat datang di AzurLizeTeam Bot!</b>\n\n`;
+      responseText += `Saya adalah bot asisten resmi untuk <b>AzurLizeTeam</b>.\n\n`;
+      responseText += `🚀 <b>Mini Web App kami sudah siap digunakan!</b> Anda dapat mengelola laporan harian, memantau data pelamar, memeriksa postingan harian, dan melihat statistik performa secara langsung dan real-time.\n\n`;
+      responseText += `📱 <b>Cara membuka Mini Web App:</b>\n`;
+      responseText += `• Klik tombol <b>"Buka Mini App"</b> di bawah ini.\n`;
+      responseText += `• Atau klik tombol menu/web app di pojok kiri bawah obrolan ini.\n\n`;
+      responseText += `<i>Jika Anda membutuhkan bantuan info chat/grup, gunakan perintah /id atau /info. Selamat bekerja!</i>`;
+
+      // Get WebApp URL dynamically
+      const host = req.get('host') || 'ais-dev-zbqn5b46dflqymdy6ajpnm-268860382066.asia-east1.run.app';
+      const protocol = req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+      const webAppUrl = `${protocol}://${host}`;
+
+      const keyboard = {
+        inline_keyboard: [
+          [
+            {
+              text: '🚀 Buka Mini App',
+              web_app: { url: webAppUrl }
+            }
+          ],
+          [
+            {
+              text: '🔗 Link Alternatif Browser',
+              url: webAppUrl
+            }
+          ]
+        ]
+      };
+
+      await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: responseText,
+          parse_mode: 'HTML',
+          reply_markup: keyboard,
+          message_thread_id: threadId
+        })
+      });
+    }
+
     if (msg && msg.text && (msg.text.startsWith('/id') || msg.text.startsWith('/info'))) {
       const chatId = msg.chat.id;
       const threadId = msg.message_thread_id;

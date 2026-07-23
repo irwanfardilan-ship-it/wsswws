@@ -280,7 +280,12 @@ const CHANNELS = [
   { id: 'Lainnya', label: 'Lainnya', color: 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400', activeBg: 'bg-emerald-600 text-white' },
 ];
 
-const ReportListCard: React.FC<{ rep: DailyReport, isAdminOrOwner: boolean, onUpdateStatus: (id: string, status: 'Pending' | 'ACC' | 'REJECT') => void }> = ({ rep, isAdminOrOwner, onUpdateStatus }) => {
+const ReportListCard: React.FC<{
+  rep: DailyReport,
+  isAdminOrOwner: boolean,
+  onUpdateStatus: (id: string, status: 'Pending' | 'ACC' | 'REJECT') => void,
+  onUpdatePermission?: (id: string, permission: number) => void
+}> = ({ rep, isAdminOrOwner, onUpdateStatus, onUpdatePermission }) => {
   const { clean, formatted, url } = rep.applicantTelegramUsername ? parseTelegramUsername(rep.applicantTelegramUsername) : { clean: null, formatted: null, url: null };
 
   return (
@@ -344,6 +349,25 @@ const ReportListCard: React.FC<{ rep: DailyReport, isAdminOrOwner: boolean, onUp
             <strong className="text-slate-200">{formatUsername(rep.recruiterUsername)}</strong>
           </div>
         )}
+        
+        {/* Status Izin Section */}
+        <div className="flex flex-col gap-0.5 col-span-2 pt-1.5 border-t border-slate-900/40 mt-1">
+          <span className="text-slate-500 font-semibold uppercase text-[8px] tracking-wider">Status Izin</span>
+          {isAdminOrOwner ? (
+            <select
+              value={rep.permission === 1 ? '1' : '0'}
+              onChange={(e) => onUpdatePermission?.(rep.reportId || '', Number(e.target.value))}
+              className="mt-0.5 w-full px-2 py-1 rounded-xl text-[10px] font-bold border border-slate-800 outline-none cursor-pointer bg-slate-900 text-slate-200 focus:border-sky-500"
+            >
+              <option value="0" className="bg-slate-900 text-slate-300">Tidak (Aktif)</option>
+              <option value="1" className="bg-slate-900 text-rose-400 font-bold">Ya (Izin)</option>
+            </select>
+          ) : (
+            <strong className={`font-bold ${rep.permission === 1 ? 'text-rose-400' : 'text-emerald-400'}`}>
+              {rep.permission === 1 ? 'Ya (Izin)' : 'Tidak (Aktif)'}
+            </strong>
+          )}
+        </div>
       </div>
 
       {clean && (
@@ -369,7 +393,7 @@ const ReportListCard: React.FC<{ rep: DailyReport, isAdminOrOwner: boolean, onUp
 
 export const DataHarianPage: React.FC = () => {
   const { userProfile, telegramUser } = useAuth();
-  const { reports, submitReport, updateStatus, isLoading } = useReports();
+  const { reports, submitReport, updateStatus, updatePermission, isLoading } = useReports();
   const [activeTab, setActiveTab] = useState<'formulir' | 'minggu_ini' | 'pemeriksaan' | 'arsip'>('formulir');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isChannelDropdownOpen, setIsChannelDropdownOpen] = useState<boolean>(false);
@@ -1420,7 +1444,7 @@ export const DataHarianPage: React.FC = () => {
             <>
               <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
                 {paginatedReportsMingguIni.map((rep, idx) => (
-                  <ReportListCard key={rep.reportId || idx} rep={rep} isAdminOrOwner={isAdminOrOwner} onUpdateStatus={updateStatus} />
+                  <ReportListCard key={rep.reportId || idx} rep={rep} isAdminOrOwner={isAdminOrOwner} onUpdateStatus={updateStatus} onUpdatePermission={updatePermission} />
                 ))}
               </div>
               {renderPagination(reportsMingguIni.length)}
@@ -1451,7 +1475,7 @@ export const DataHarianPage: React.FC = () => {
             <>
               <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
                 {paginatedReportsPemeriksaan.map((rep, idx) => (
-                  <ReportListCard key={rep.reportId || idx} rep={rep} isAdminOrOwner={isAdminOrOwner} onUpdateStatus={updateStatus} />
+                  <ReportListCard key={rep.reportId || idx} rep={rep} isAdminOrOwner={isAdminOrOwner} onUpdateStatus={updateStatus} onUpdatePermission={updatePermission} />
                 ))}
               </div>
               {renderPagination(reportsPemeriksaan.length)}
@@ -1482,7 +1506,7 @@ export const DataHarianPage: React.FC = () => {
             <>
               <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
                 {paginatedReportsArsip.map((rep, idx) => (
-                  <ReportListCard key={rep.reportId || idx} rep={rep} isAdminOrOwner={isAdminOrOwner} onUpdateStatus={updateStatus} />
+                  <ReportListCard key={rep.reportId || idx} rep={rep} isAdminOrOwner={isAdminOrOwner} onUpdateStatus={updateStatus} onUpdatePermission={updatePermission} />
                 ))}
               </div>
               {renderPagination(reportsArsip.length)}

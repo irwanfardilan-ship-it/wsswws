@@ -8,14 +8,15 @@ import { useAuth } from '../hooks/useAuth';
 import { subscribeToRecruiterPosts } from '../firebase/services/postService';
 import { DailyReportFormData, BatchPost } from '../types';
 import { Calendar, Eye, UserCheck, Star, Share2, AlertCircle, FileText, CheckCircle2, Sparkles, RefreshCw, Copy } from 'lucide-react';
-import { getWIBDate } from '../utils/format';
+import { getWIBDate, getWIBMondayOfDate } from '../utils/format';
 
 export const LaporanHarianPage: React.FC = () => {
-  const { submitReport, isLoading } = useReports();
+  const { submitReport, isLoading, reports } = useReports();
   const { userProfile, telegramUser } = useAuth();
 
   const todayStr = getWIBDate();
   const effectiveTelegramId = userProfile?.telegramId || (telegramUser?.id ? String(telegramUser.id) : '');
+  const isAdminOrOwner = userProfile?.role === 'Admin' || userProfile?.role === 'Owner';
 
   const [formData, setFormData] = useState<DailyReportFormData>({
     date: todayStr,
@@ -26,6 +27,25 @@ export const LaporanHarianPage: React.FC = () => {
     permission: 0,
     note: ''
   });
+
+  const alreadyHasIzinThisWeek = useMemo(() => {
+    if (!formData.date || !reports || reports.length === 0) return false;
+    
+    const targetMonday = getWIBMondayOfDate(formData.date);
+    
+    return reports.some(r => {
+      if (r.permission !== 1) return false;
+      if (r.telegramId !== effectiveTelegramId) return false;
+      return getWIBMondayOfDate(r.date) === targetMonday;
+    });
+  }, [reports, formData.date, effectiveTelegramId]);
+
+  // Auto-reset Izin status if they already had Izin this week and are not Admin/Owner
+  useEffect(() => {
+    if (alreadyHasIzinThisWeek && !isAdminOrOwner && formData.permission === 1) {
+      setFormData(prev => ({ ...prev, permission: 0 }));
+    }
+  }, [alreadyHasIzinThisWeek, isAdminOrOwner, formData.permission]);
 
   const [allPosts, setAllPosts] = useState<BatchPost[]>([]);
   const [hasManuallyEditedPosting, setHasManuallyEditedPosting] = useState(false);
@@ -89,6 +109,11 @@ export const LaporanHarianPage: React.FC = () => {
     e.preventDefault();
     if (!formData.date) {
       setError('Tanggal wajib diisi.');
+      return;
+    }
+
+    if (formData.permission === 1 && alreadyHasIzinThisWeek && !isAdminOrOwner) {
+      setError('Batas izin Anda minggu ini sudah terpakai (Maksimal 1x per minggu, Senin - Minggu).');
       return;
     }
 
@@ -348,16 +373,31 @@ Keterangan:
               </button>
               <button
                 type="button"
+                disabled={alreadyHasIzinThisWeek && !isAdminOrOwner}
                 onClick={() => setFormData({ ...formData, permission: 1 })}
-                className={`py-2.5 px-4 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                  formData.permission === 1
-                    ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 font-black'
-                    : 'bg-slate-900/80 text-slate-400 border-slate-800/80 hover:text-slate-300 hover:border-slate-700'
+                className={`py-2.5 px-4 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 ${
+                  alreadyHasIzinThisWeek && !isAdminOrOwner
+                    ? 'opacity-50 cursor-not-allowed bg-slate-950 text-slate-600 border-slate-900'
+                    : formData.permission === 1
+                    ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 font-black cursor-pointer'
+                    : 'bg-slate-900/80 text-slate-400 border-slate-800/80 hover:text-slate-300 hover:border-slate-700 cursor-pointer'
                 }`}
               >
                 Ya (Izin)
               </button>
             </div>
+            {alreadyHasIzinThisWeek && !isAdminOrOwner && (
+              <p className="text-[10px] text-rose-400 font-semibold px-1 mt-1 flex items-center gap-1 leading-normal">
+                <span>⚠️</span>
+                <span>Batas izin Anda minggu ini sudah terpakai (Maksimal 1x per minggu, Senin - Minggu).</span>
+              </p>
+            )}
+            {isAdminOrOwner && alreadyHasIzinThisWeek && (
+              <p className="text-[10px] text-amber-400 font-semibold px-1 mt-1 flex items-center gap-1 leading-normal">
+                <span>💡</span>
+                <span>Recruiter sudah izin minggu ini, tetapi Anda dapat mengaktifkannya kembali karena Anda adalah Admin/Owner.</span>
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col gap-1.5">

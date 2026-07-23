@@ -99,6 +99,28 @@ export function getWIBMonday(offsetDays: number = 0): string {
   return `${year}-${month}-${date}`;
 }
 
+/**
+ * Gets the date of the Monday for any given date in YYYY-MM-DD format
+ */
+export function getWIBMondayOfDate(dateStr: string): string {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return '';
+  const year = Number(parts[0]);
+  const month = Number(parts[1]);
+  const day = Number(parts[2]);
+  
+  const d = new Date(year, month - 1, day);
+  const dayOfWeek = d.getDay(); // 0 (Sun) to 6 (Sat)
+  const diff = d.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+  d.setDate(diff);
+  
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dt = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${dt}`;
+}
+
 export interface WIBWeekDayInfo {
   dayName: 'Senin' | 'Selasa' | 'Rabu' | 'Kamis' | 'Jumat' | 'Sabtu' | 'Minggu';
   dateStr: string; // YYYY-MM-DD

@@ -4,7 +4,8 @@ import {
   createDailyReport, 
   subscribeToUserReports, 
   subscribeToAllReports, 
-  updateReportStatus 
+  updateReportStatus,
+  updateReportPermission
 } from '../firebase/services/reportService';
 import { syncReportToSheetsApi } from '../services/api';
 import { useAuth } from './useAuth';
@@ -91,12 +92,27 @@ export function useReports() {
     }
   };
 
+  const updatePermission = async (reportId: string, permission: number) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await updateReportPermission(reportId, permission);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Gagal mengubah status izin.';
+      setError(msg);
+      throw new Error(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     reports,
     isLoading,
     error,
     refetch: () => {}, // Handled by real-time listener
     submitReport,
-    updateStatus
+    updateStatus,
+    updatePermission
   };
 }

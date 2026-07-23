@@ -126,6 +126,15 @@ export async function updateReportStatus(reportId: string, result: 'Pending' | '
   }
 }
 
+export async function updateReportPermission(reportId: string, permission: number): Promise<void> {
+  try {
+    const reportRef = doc(db, COLLECTION_NAME, reportId);
+    await setDoc(reportRef, { permission, updatedAt: new Date().toISOString() }, { merge: true });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, `${COLLECTION_NAME}/${reportId}`);
+  }
+}
+
 export async function checkReportDuplicate(
   uid9Kucing: string,
   applicantTelegramUsername: string

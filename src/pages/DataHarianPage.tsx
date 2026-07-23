@@ -916,123 +916,103 @@ export const DataHarianPage: React.FC = () => {
             </div>
           )}
 
-          {/* Tanggal & Recruiter Username (Auto Set Display) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* 1. Tanggal (Auto Set Hari Ini) */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold tracking-wider text-slate-400 uppercase px-1 flex items-center justify-between">
-                <span>Tanggal</span>
-                <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/20">Auto Set</span>
-              </label>
-              <div className="w-full rounded-2xl py-3 px-4 text-sm font-bold border border-slate-800 bg-slate-950 text-sky-300 flex items-center gap-2">
-                <CalendarClock className="w-4 h-4 text-sky-400 shrink-0" />
-                <span>{formData.date}</span>
-              </div>
+          {/* Metadata Bar (Tanggal, Recruiter, Status) */}
+          <div className="grid grid-cols-3 gap-2 text-[10px] sm:text-xs text-slate-400 bg-slate-950/60 p-3 rounded-2xl border border-slate-900/80">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-slate-500 font-bold uppercase text-[8px] tracking-wider">Tanggal</span>
+              <span className="text-sky-300 font-black">{formData.date}</span>
             </div>
-
-            {/* 2. Username Recruiter (Auto Set) */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold tracking-wider text-slate-400 uppercase px-1 flex items-center justify-between">
-                <span>Username Recruiter</span>
-                <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/20">Auto Set</span>
-              </label>
-              <div className="w-full rounded-2xl py-3 px-4 text-sm font-bold border border-slate-800 bg-slate-950 text-sky-300 flex items-center gap-2">
-                <AtSign className="w-4 h-4 text-sky-400 shrink-0" />
-                <span>{formData.recruiterUsername}</span>
-              </div>
+            <div className="flex flex-col gap-0.5 border-l border-slate-800/60 pl-2">
+              <span className="text-slate-500 font-bold uppercase text-[8px] tracking-wider">Recruiter</span>
+              <span className="text-sky-300 font-black truncate">{formData.recruiterUsername}</span>
+            </div>
+            <div className="flex flex-col gap-0.5 border-l border-slate-800/60 pl-2">
+              <span className="text-slate-500 font-bold uppercase text-[8px] tracking-wider">Status Default</span>
+              <span className="text-amber-400 font-black flex items-center gap-0.5">
+                <Lock className="w-2.5 h-2.5 shrink-0" /> Pending
+              </span>
             </div>
           </div>
 
-          {/* 3. Channels Custom Dropdown */}
-          <div className="space-y-1.5 relative">
-            <label className="text-xs font-bold tracking-wider text-slate-400 uppercase px-1 flex items-center gap-2">
-              <Share2 className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Channel / Platform</span>
-            </label>
-            
-            <div className="relative">
-              {/* Dropdown Trigger Button */}
-              <button
-                key="channel-dropdown-trigger"
-                type="button"
-                onClick={() => {
-                  setIsChannelDropdownOpen(!isChannelDropdownOpen);
-                  triggerHaptic('selection');
-                }}
-                className="w-full rounded-2xl py-3 px-4 text-sm font-semibold border border-slate-800 bg-slate-900/80 hover:bg-slate-800/60 text-slate-100 flex items-center justify-between transition-all duration-200 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
-              >
-                <div className="flex items-center gap-2.5">
-                  {formData.channel ? (
-                    <>
-                      <ChannelPlatformIcon id={formData.channel} className="w-4 h-4 shrink-0" />
-                      <span>{CHANNELS.find(c => c.id === formData.channel)?.label || formData.channel}</span>
-                    </>
-                  ) : (
-                    <span className="text-slate-500">Pilih Channel / Platform</span>
-                  )}
-                </div>
-                <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isChannelDropdownOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {/* Dropdown Options Panel */}
-              {isChannelDropdownOpen && (
-                <>
-                  {/* Backdrop Click Handler to Close */}
-                  <div 
-                    key="channel-dropdown-backdrop"
-                    className="fixed inset-0 z-40" 
-                    onClick={() => setIsChannelDropdownOpen(false)} 
-                  />
-                  
-                  {/* Options Container */}
-                  <div 
-                    key="channel-dropdown-options"
-                    className="absolute left-0 right-0 mt-1.5 rounded-2xl border border-slate-800/90 bg-slate-950/95 backdrop-blur-xl shadow-2xl z-50 py-1.5 max-h-64 overflow-y-auto divide-y divide-slate-900/50"
-                  >
-                    {CHANNELS.map((ch) => {
-                      const isSelected = formData.channel === ch.id;
-                      return (
-                        <button
-                          key={ch.id}
-                          type="button"
-                          onClick={() => {
-                            setFormData({ ...formData, channel: ch.id });
-                            setIsChannelDropdownOpen(false);
-                            triggerHaptic('selection');
-                          }}
-                          className={`w-full text-left px-4 py-2.5 text-xs font-bold transition-all flex items-center justify-between hover:bg-slate-900 ${
-                            isSelected 
-                              ? 'text-sky-400 bg-sky-500/5' 
-                              : 'text-slate-300 hover:text-white'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <ChannelPlatformIcon id={ch.id} className="w-4 h-4 shrink-0" />
-                            <span>{ch.label}</span>
-                          </div>
-                          {isSelected && <Check className="w-3.5 h-3.5 text-sky-400" />}
-                        </button>
-                      );
-                    })}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            {/* 3. Channels Custom Dropdown */}
+            <div className="space-y-1.5 relative">
+              <label className="text-xs font-bold tracking-wider text-slate-400 uppercase px-1 flex items-center gap-2">
+                <Share2 className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Channel / Platform</span>
+              </label>
+              
+              <div className="relative">
+                {/* Dropdown Trigger Button */}
+                <button
+                  key="channel-dropdown-trigger"
+                  type="button"
+                  onClick={() => {
+                    setIsChannelDropdownOpen(!isChannelDropdownOpen);
+                    triggerHaptic('selection');
+                  }}
+                  className="w-full rounded-2xl py-3 px-4 text-sm font-semibold border border-slate-800 bg-slate-900/80 hover:bg-slate-800/60 text-slate-100 flex items-center justify-between transition-all duration-200 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
+                >
+                  <div className="flex items-center gap-2.5">
+                    {formData.channel ? (
+                      <>
+                        <ChannelPlatformIcon id={formData.channel} className="w-4 h-4 shrink-0" />
+                        <span>{CHANNELS.find(c => c.id === formData.channel)?.label || formData.channel}</span>
+                      </>
+                    ) : (
+                      <span className="text-slate-500">Pilih Channel / Platform</span>
+                    )}
                   </div>
-                </>
-              )}
+                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isChannelDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* Dropdown Options Panel */}
+                {isChannelDropdownOpen && (
+                  <>
+                    {/* Backdrop Click Handler to Close */}
+                    <div 
+                      key="channel-dropdown-backdrop"
+                      className="fixed inset-0 z-40" 
+                      onClick={() => setIsChannelDropdownOpen(false)} 
+                    />
+                    
+                    {/* Options Container */}
+                    <div 
+                      key="channel-dropdown-options"
+                      className="absolute left-0 right-0 mt-1.5 rounded-2xl border border-slate-800/90 bg-slate-950/95 backdrop-blur-xl shadow-2xl z-50 py-1.5 max-h-64 overflow-y-auto divide-y divide-slate-900/50"
+                    >
+                      {CHANNELS.map((ch) => {
+                        const isSelected = formData.channel === ch.id;
+                        return (
+                          <button
+                            key={ch.id}
+                            type="button"
+                            onClick={() => {
+                              setFormData({ ...formData, channel: ch.id });
+                              setIsChannelDropdownOpen(false);
+                              triggerHaptic('selection');
+                            }}
+                            className={`w-full text-left px-4 py-2.5 text-xs font-bold transition-all flex items-center justify-between hover:bg-slate-900 ${
+                              isSelected 
+                                ? 'text-sky-400 bg-sky-500/5' 
+                                : 'text-slate-300 hover:text-white'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <ChannelPlatformIcon id={ch.id} className="w-4 h-4 shrink-0" />
+                              <span>{ch.label}</span>
+                            </div>
+                            {isSelected && <Check className="w-3.5 h-3.5 text-sky-400" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* 4. WA Nomor WA Pelamar */}
-          <Input
-            label="Nomor WA Pelamar"
-            type="tel"
-            placeholder="Contoh: 081234567890 / 628123..."
-            icon={<Phone className="w-4 h-4 text-emerald-400" />}
-            value={formData.applicantWhatsapp}
-            onChange={(e) => setFormData({ ...formData, applicantWhatsapp: e.target.value })}
-            required
-          />
-
-          {/* 5. UID 9kucing & Username Telegram Pelamar */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* 4. UID 9kucing */}
             <Input
               label="UID 9kucing"
               type="text"
@@ -1044,7 +1024,21 @@ export const DataHarianPage: React.FC = () => {
               onChange={(e) => setFormData({ ...formData, uid9Kucing: e.target.value.replace(/\D/g, '') })}
               required
             />
+          </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            {/* 5. WA Nomor WA Pelamar */}
+            <Input
+              label="Nomor WA Pelamar"
+              type="tel"
+              placeholder="Contoh: 081234567890 / 628123..."
+              icon={<Phone className="w-4 h-4 text-emerald-400" />}
+              value={formData.applicantWhatsapp}
+              onChange={(e) => setFormData({ ...formData, applicantWhatsapp: e.target.value })}
+              required
+            />
+
+            {/* 6. Username Telegram Pelamar */}
             <div className="space-y-1.5">
               <Input
                 label="Username Telegram Pelamar"
@@ -1214,83 +1208,82 @@ export const DataHarianPage: React.FC = () => {
             );
           })()}
 
-          {/* 6. Results (Auto Pending for Everyone) */}
-          <div className="space-y-2">
-            <label className="text-xs font-bold tracking-wider text-slate-400 uppercase px-1 flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <UserCheck className="w-3.5 h-3.5 text-blue-400" />
-                <span>Result (Hasil Seleksi)</span>
-              </span>
-              <span className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 flex items-center gap-1">
-                <Lock className="w-3 h-3" /> Auto Pending
-              </span>
-            </label>
-            <div className="p-3.5 rounded-2xl bg-slate-950/90 border border-amber-500/30 text-xs flex items-center justify-between gap-3 shadow-inner">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                  <HelpCircle className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="font-extrabold text-white">Status: Pending</p>
-                  <p className="text-[10px] text-slate-400 leading-tight">
-                    Semua input data otomatis berstatus Pending. Persetujuan (ACC / REJECT) dilakukan secara individual di daftar laporan.
-                  </p>
-                </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            {/* 7. Grup (Recruiter = T0 & V0, Admin/Owner = T0, V0, T3) */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold tracking-wider text-slate-400 uppercase px-1 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-purple-400" />
+                  <span>Grup</span>
+                </span>
+              </label>
+              <div className="grid grid-cols-3 gap-1.5">
+                {(['T0', 'V0'] as const).map((g) => (
+                  <button
+                    key={g}
+                    type="button"
+                    onClick={() => {
+                      setFormData({ ...formData, grup: g });
+                      triggerHaptic('selection');
+                    }}
+                    className={`py-2 px-2 rounded-xl text-xs font-black border transition-all flex items-center justify-center gap-1 ${
+                      formData.grup === g
+                        ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white border-sky-400 shadow-md'
+                        : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700'
+                    }`}
+                  >
+                    <span>Grup {g}</span>
+                  </button>
+                ))}
+
+                {isAdminOrOwner ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData({ ...formData, grup: 'T3' });
+                      triggerHaptic('selection');
+                    }}
+                    className={`py-2 px-2 rounded-xl text-xs font-black border transition-all flex items-center justify-center gap-1 ${
+                      formData.grup === 'T3'
+                        ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white border-sky-400 shadow-md'
+                        : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700'
+                    }`}
+                  >
+                    <span>Grup T3</span>
+                  </button>
+                ) : (
+                  <div
+                    title="Khusus Admin & Owner"
+                    className="py-2 px-2 rounded-xl text-xs font-bold border border-slate-800/80 bg-slate-950/50 text-slate-500 opacity-60 flex items-center justify-center gap-1 cursor-not-allowed"
+                  >
+                    <Lock className="w-3 h-3 text-slate-500" />
+                    <span>T3 (Admin)</span>
+                  </div>
+                )}
               </div>
-              <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40 shrink-0">
-                Pending
-              </span>
             </div>
-          </div>
 
-          {/* 7. Grup (Recruiter = T0 & V0, Admin/Owner = T0, V0, T3) */}
-          <div className="space-y-2">
-            <label className="text-xs font-bold tracking-wider text-slate-400 uppercase px-1 flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <Users className="w-3.5 h-3.5 text-purple-400" />
-                <span>Grup</span>
-              </span>
-              {!isAdminOrOwner && (
-                <span className="text-[10px] text-slate-400 font-medium">T0 & V0 (T3 khusus Admin/Owner)</span>
-              )}
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              {(['T0', 'V0'] as const).map((g) => (
-                <button
-                  key={g}
-                  type="button"
-                  onClick={() => setFormData({ ...formData, grup: g })}
-                  className={`py-2.5 px-3 rounded-2xl text-xs font-black border transition-all flex items-center justify-center gap-1.5 ${
-                    formData.grup === g
-                      ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white border-sky-400 shadow-lg scale-[1.02]'
-                      : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700'
-                  }`}
-                >
-                  <span>Grup {g}</span>
-                </button>
-              ))}
-
-              {isAdminOrOwner ? (
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, grup: 'T3' })}
-                  className={`py-2.5 px-3 rounded-2xl text-xs font-black border transition-all flex items-center justify-center gap-1.5 ${
-                    formData.grup === 'T3'
-                      ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white border-sky-400 shadow-lg scale-[1.02]'
-                      : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700'
-                  }`}
-                >
-                  <span>Grup T3</span>
-                </button>
-              ) : (
-                <div
-                  title="Khusus Admin & Owner"
-                  className="py-2.5 px-3 rounded-2xl text-xs font-bold border border-slate-800/80 bg-slate-950/50 text-slate-500 opacity-60 flex items-center justify-center gap-1.5 cursor-not-allowed"
-                >
-                  <Lock className="w-3 h-3 text-slate-500" />
-                  <span>T3 (Admin)</span>
-                </div>
-              )}
+            {/* Upload Video Bukti */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold tracking-wider text-slate-400 uppercase px-1 flex items-center gap-1.5">
+                <span className="w-3.5 h-3.5 text-slate-400">🎥</span>
+                <span>Bukti Video</span>
+              </label>
+              <input
+                type="file"
+                accept="video/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                      setFormData({ ...formData, videoUrl: ev.target?.result as string });
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+                className="w-full text-xs text-slate-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[10px] file:font-bold file:bg-sky-500/20 file:text-sky-400 hover:file:bg-sky-500/30 border border-slate-800/80 rounded-xl p-1 bg-slate-900/40"
+              />
             </div>
           </div>
 
@@ -1305,30 +1298,7 @@ export const DataHarianPage: React.FC = () => {
               placeholder="Catatan pelamar atau kendala (opsional)..."
               value={formData.note}
               onChange={(e) => setFormData({ ...formData, note: e.target.value })}
-              className="w-full rounded-2xl py-3 px-4 text-sm font-medium outline-none border border-slate-800 bg-slate-900/80 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 text-white transition-all placeholder:text-slate-500"
-            />
-          </div>
-
-          {/* Upload Video Bukti */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold tracking-wider text-slate-400 uppercase px-1 flex items-center gap-1.5">
-              <span className="w-3.5 h-3.5 text-slate-400">🎥</span>
-              <span>Bukti Video</span>
-            </label>
-            <input
-              type="file"
-              accept="video/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  const reader = new FileReader();
-                  reader.onload = (ev) => {
-                    setFormData({ ...formData, videoUrl: ev.target?.result as string });
-                  };
-                  reader.readAsDataURL(file);
-                }
-              }}
-              className="w-full text-sm text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-sky-500/20 file:text-sky-400 hover:file:bg-sky-500/30"
+              className="w-full rounded-2xl py-2 px-4 text-xs font-medium outline-none border border-slate-800 bg-slate-900/80 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 text-white transition-all placeholder:text-slate-500"
             />
           </div>
 

@@ -1,17 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { GlassCard } from '../components/common/GlassCard';
 import { Input } from '../components/common/Input';
 import { Button } from '../components/common/Button';
 import { useReports } from '../hooks/useReports';
-import { DailyReportFormData } from '../types';
-import { Calendar, Eye, UserCheck, Star, Share2, AlertCircle, FileText, CheckCircle2, Sparkles } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
+import { subscribeToRecruiterPosts } from '../firebase/services/postService';
+import { DailyReportFormData, BatchPost } from '../types';
+import { Calendar, Eye, UserCheck, Star, Share2, AlertCircle, FileText, CheckCircle2, Sparkles, RefreshCw } from 'lucide-react';
 import { getWIBDate } from '../utils/format';
 
 export const LaporanHarianPage: React.FC = () => {
   const { submitReport, isLoading } = useReports();
+  const { userProfile, telegramUser } = useAuth();
 
   const todayStr = getWIBDate();
+  const effectiveTelegramId = userProfile?.telegramId || (telegramUser?.id ? String(telegramUser.id) : '');
 
   const [formData, setFormData] = useState<DailyReportFormData>({
     date: todayStr,
@@ -23,8 +27,62 @@ export const LaporanHarianPage: React.FC = () => {
     note: ''
   });
 
+  const [allPosts, setAllPosts] = useState<BatchPost[]>([]);
+  const [hasManuallyEditedPosting, setHasManuallyEditedPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  // Subscribe to recruiter posts
+  useEffect(() => {
+    if (!effectiveTelegramId) return;
+
+    const unsubscribe = subscribeToRecruiterPosts(
+      effectiveTelegramId,
+      (fetchedPosts) => {
+        setAllPosts(fetchedPosts);
+      },
+      100
+    );
+
+    return () => unsubscribe();
+  }, [effectiveTelegramId]);
+
+  // Compute auto-detected posting count for the selected date
+  const autoPostingCount = useMemo(() => {
+    const normalizeDate = (d: string) => {
+      if (!d) return '';
+      const parts = d.split('-');
+      if (parts.length !== 3) return d;
+      if (parts[0].length === 2) return parts.reverse().join('-');
+      return d;
+    };
+
+    const targetDate = normalizeDate(formData.date);
+    const matchedPosts = allPosts.filter(p => normalizeDate(p.date || '') === targetDate && !p.archived);
+
+    return matchedPosts.reduce((sum, post) => {
+      const linkCount = Array.isArray(post.links) ? post.links.length : 0;
+      return sum + linkCount;
+    }, 0);
+  }, [allPosts, formData.date]);
+
+  // Sync autoPostingCount with formData.posting
+  useEffect(() => {
+    if (!hasManuallyEditedPosting) {
+      setFormData(prev => ({
+        ...prev,
+        posting: autoPostingCount
+      }));
+    }
+  }, [autoPostingCount, hasManuallyEditedPosting]);
+
+  const handleDateChange = (newDate: string) => {
+    setHasManuallyEditedPosting(false); // Reset manual override flag so new date auto-fills
+    setFormData(prev => ({
+      ...prev,
+      date: newDate
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,6 +108,7 @@ export const LaporanHarianPage: React.FC = () => {
         permission: 0,
         note: ''
       });
+      setHasManuallyEditedPosting(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal mengirim laporan harian.');
     }
@@ -95,7 +154,7 @@ export const LaporanHarianPage: React.FC = () => {
             type="date"
             icon={<Calendar className="w-4 h-4" />}
             value={formData.date}
-            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+            onChange={(e) => handleDateChange(e.target.value)}
             required
           />
 
@@ -135,16 +194,40 @@ export const LaporanHarianPage: React.FC = () => {
               required
             />
 
-            <Input
-              label="Jumlah Postingan"
-              type="number"
-              min="0"
-              placeholder="0"
-              icon={<Share2 className="w-4 h-4 text-indigo-400" />}
-              value={formData.posting}
-              onChange={(e) => setFormData({ ...formData, posting: Number(e.target.value) })}
-              required
-            />
+            <div className="relative flex flex-col">
+              <Input
+                label="Jumlah Postingan"
+                type="number"
+                min="0"
+                placeholder="0"
+                icon={<Share2 className="w-4 h-4 text-indigo-400" />}
+                value={formData.posting}
+                onChange={(e) => {
+                  setFormData({ ...formData, posting: Number(e.target.value) });
+                  setHasManuallyEditedPosting(true);
+                }}
+                required
+              />
+              <div className="mt-1 flex items-center justify-between px-1 text-[9px] leading-tight">
+                <span className="text-slate-400 flex items-center gap-0.5">
+                  <Sparkles className="w-3 h-3 text-indigo-400 animate-pulse shrink-0" />
+                  <span>Auto: <strong className="text-indigo-400">{autoPostingCount}</strong> link</span>
+                </span>
+                {hasManuallyEditedPosting && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData(prev => ({ ...prev, posting: autoPostingCount }));
+                      setHasManuallyEditedPosting(false);
+                    }}
+                    className="text-indigo-400 hover:text-indigo-300 font-black flex items-center gap-0.5 transition-colors"
+                  >
+                    <RefreshCw className="w-2.5 h-2.5 shrink-0" />
+                    <span>Sync</span>
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
 
           <Input

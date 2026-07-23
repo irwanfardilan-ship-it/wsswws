@@ -103,6 +103,15 @@ const CHANNELS = [
   { id: 'Lainnya', label: 'Lainnya', color: 'text-slate-400 border-slate-700 bg-slate-800/20', active: 'bg-slate-700 text-white border-slate-600' },
 ];
 
+const detectStartNumber = (text: string): number | null => {
+  const match = text.match(/(?:^|\s|\n|\r)(?:No\.?\s*|ke\-)?(\d+)(?:[\s\.\)\:\-\]]+)(https?:\/\/[^\s]+)/i);
+  if (match) {
+    const num = parseInt(match[1], 10);
+    if (!isNaN(num)) return num;
+  }
+  return null;
+};
+
 export const PostinganPage: React.FC = () => {
   const { userProfile, telegramUser } = useAuth();
   const { reports } = useReports();
@@ -924,7 +933,17 @@ export const PostinganPage: React.FC = () => {
                           placeholder="Tempel banyak link di sini... (Contoh: 1. http://... atau langsung link saja)"
                           className="w-full h-32 p-4 rounded-2xl bg-slate-950/40 border border-slate-800 text-[11px] text-white placeholder:text-slate-700 outline-none focus:border-sky-500/30 transition-all resize-none font-medium leading-relaxed"
                           value={bulkText}
-                          onChange={(e) => setBulkText(e.target.value)}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setBulkText(val);
+                            
+                            // Auto-detect start number from pasted text
+                            const detectedNum = detectStartNumber(val);
+                            if (detectedNum !== null) {
+                              setStartNumber(detectedNum);
+                              setHasUserEditedStartNumber(true);
+                            }
+                          }}
                         />
                         <div className="absolute top-2 right-2 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none">
                           <span className="text-[8px] font-black text-sky-500 bg-sky-500/10 px-1.5 py-0.5 rounded border border-sky-500/20 uppercase">
@@ -937,31 +956,46 @@ export const PostinganPage: React.FC = () => {
                         fullWidth
                         variant="secondary"
                         disabled={!bulkText.trim()}
-                          onClick={() => {
-                            const rawLinks = bulkText.match(/https?:\/\/[^\s]+/g);
-                            if (!rawLinks || rawLinks.length === 0) {
-                              setStatus({ type: 'error', message: 'Tidak ada link valid yang ditemukan.' });
-                              return;
-                            }
+                        onClick={() => {
+                          const rawLinks = bulkText.match(/https?:\/\/[^\s]+/g);
+                          if (!rawLinks || rawLinks.length === 0) {
+                            setStatus({ type: 'error', message: 'Tidak ada link valid yang ditemukan.' });
+                            return;
+                          }
 
-                            const detected = rawLinks.map(url => url.replace(/[,\.\)]+$/, ''));
+                          const detected = rawLinks.map(url => url.replace(/[,\.\)]+$/, ''));
 
-                            if (detected.length > 10) {
-                              setStatus({ type: 'error', message: 'Maksimal 10 link diperbolehkan. Mohon kurangi jumlah link.' });
-                              return;
-                            }
+                          if (detected.length > 10) {
+                            setStatus({ type: 'error', message: 'Maksimal 10 link diperbolehkan. Mohon kurangi jumlah link.' });
+                            return;
+                          }
 
-                            // Try to detect start number from first numbered link if present (e.g., "41. http...")
-                            const formattedLinks: SocialLink[] = detected.map(url => {
-                            let platform: SocialPlatform = 'Facebook';
+                          // Auto detect start number as backup
+                          const detectedNum = detectStartNumber(bulkText);
+                          if (detectedNum !== null) {
+                            setStartNumber(detectedNum);
+                            setHasUserEditedStartNumber(true);
+                          }
+
+                          // Try to detect platform with correct fallbacks
+                          const formattedLinks: SocialLink[] = detected.map(url => {
+                            let platform: SocialPlatform = 'Lainnya';
                             const lowUrl = url.toLowerCase();
-                            if (lowUrl.includes('facebook.com') || lowUrl.includes('fb.com') || lowUrl.includes('fb.watch')) platform = 'Facebook';
-                            else if (lowUrl.includes('x.com') || lowUrl.includes('twitter.com')) platform = 'X (Twitter)';
-                            else if (lowUrl.includes('instagram.com')) platform = 'Instagram';
-                            else if (lowUrl.includes('tiktok.com')) platform = 'TikTok';
-                            else if (lowUrl.includes('threads.net')) platform = 'Threads';
-                            else if (lowUrl.includes('wa.me') || lowUrl.includes('whatsapp.com')) platform = 'WhatsApp';
-                            else if (lowUrl.includes('t.me')) platform = 'Telegram';
+                            if (lowUrl.includes('facebook.com') || lowUrl.includes('fb.com') || lowUrl.includes('fb.watch')) {
+                              platform = 'Facebook';
+                            } else if (lowUrl.includes('x.com') || lowUrl.includes('twitter.com')) {
+                              platform = 'X (Twitter)';
+                            } else if (lowUrl.includes('instagram.com') || lowUrl.includes('instagr.am')) {
+                              platform = 'Instagram';
+                            } else if (lowUrl.includes('tiktok.com')) {
+                              platform = 'TikTok';
+                            } else if (lowUrl.includes('threads.net')) {
+                              platform = 'Threads';
+                            } else if (lowUrl.includes('wa.me') || lowUrl.includes('whatsapp.com')) {
+                              platform = 'WhatsApp';
+                            } else if (lowUrl.includes('t.me') || lowUrl.includes('telegram.me') || lowUrl.includes('telegram.org')) {
+                              platform = 'Telegram';
+                            }
                             
                             return { url, platform };
                           });

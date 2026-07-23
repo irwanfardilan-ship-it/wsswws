@@ -1290,31 +1290,6 @@ export const DataHarianPage: React.FC = () => {
           </Button>
         </form>
       </GlassCard>
-
-      {/* Riwayat Input Pelamar Hari Ini */}
-      {userReports.length > 0 && (
-        <GlassCard className="p-4 space-y-3 border-slate-800 bg-slate-900/80">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-xl bg-sky-500/15 text-sky-400">
-                <FileSpreadsheet className="w-4 h-4" />
-              </div>
-              <span className="text-xs font-bold text-white uppercase tracking-wider">
-                Riwayat Data Harian Terbaru
-              </span>
-            </div>
-            <span className="text-[10px] bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded-full font-bold">
-              Total {userReports.length} Entry
-            </span>
-          </div>
-
-          <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-            {userReports.slice(0, 5).map((rep, idx) => (
-              <ReportListCard key={rep.reportId || idx} rep={rep} isAdminOrOwner={isAdminOrOwner} onUpdateStatus={updateStatus} />
-            ))}
-          </div>
-        </GlassCard>
-      )}
         </>
       )}
 

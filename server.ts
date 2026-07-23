@@ -263,12 +263,6 @@ app.post('/api/telegram/webhook', async (req: Request, res: Response) => {
               text: '🚀 Buka Mini App',
               web_app: { url: webAppUrl }
             }
-          ],
-          [
-            {
-              text: '🔗 Link Alternatif Browser',
-              url: webAppUrl
-            }
           ]
         ]
       };

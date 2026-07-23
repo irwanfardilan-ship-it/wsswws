@@ -17,7 +17,7 @@ export const Header: React.FC<HeaderProps> = ({ title, showUserBadge = true }) =
         backgroundColor: 'var(--tg-header-bg-color, var(--tg-bg-color, rgba(15, 23, 42, 0.6)))',
         borderColor: 'var(--tg-secondary-bg-color, rgba(255, 255, 255, 0.1))'
       }}
-      className="sticky top-0 z-30 w-full backdrop-blur-xl border-b px-4 md:px-6 py-3 pt-safe transition-colors duration-300"
+      className="sticky top-0 z-30 w-full backdrop-blur-xl border-b px-4 md:px-8 py-3 pt-safe-header transition-colors duration-300"
     >
       <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-3">
 

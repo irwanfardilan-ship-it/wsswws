@@ -137,7 +137,7 @@ export const LoginPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 pb-12 pt-safe overflow-x-hidden">
+    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 pb-safe pt-safe-header overflow-x-hidden">
       <div className="max-w-md w-full space-y-6">
         <div className="flex flex-col items-center text-center space-y-2">
           <AzurLizeLogo size="lg" />

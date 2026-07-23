@@ -2,7 +2,6 @@ package com.azurlize.team;
 
 import android.os.Bundle;
 import android.graphics.Color;
-import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import androidx.core.view.WindowCompat;
@@ -17,11 +16,14 @@ public class MainActivity extends BridgeActivity {
         Window window = getWindow();
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-        window.setStatusBarColor(Color.TRANSPARENT);
+        window.setStatusBarColor(Color.parseColor("#030712"));
+        window.setNavigationBarColor(Color.parseColor("#030712"));
 
-        // Ensure edge-to-edge rendering without status bar obscuring
-        WindowCompat.setDecorFitsSystemWindows(window, false);
+        // Ensure status bar (clock, battery, signal) sits above webview without overlapping
+        WindowCompat.setDecorFitsSystemWindows(window, true);
         WindowInsetsControllerCompat controller = new WindowInsetsControllerCompat(window, window.getDecorView());
-        controller.setAppearanceLightStatusBars(false); // Bright white icons (clock, battery, signal) for dark theme
+        controller.setAppearanceLightStatusBars(false); // Bright white status bar icons
+        controller.setAppearanceLightNavigationBars(false);
     }
 }
+

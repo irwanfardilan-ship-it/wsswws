@@ -70,19 +70,19 @@
 
 /* Safe area padding for Telegram WebApp / iOS Notch / Android Status & Gesture Bars */
 .pt-safe-header {
-  padding-top: max(2.25rem, calc(env(safe-area-inset-top, 0px) + 0.5rem));
+  padding-top: max(0.75rem, calc(env(safe-area-inset-top, 0px) + 0.25rem));
 }
 
 .pt-safe {
-  padding-top: max(1.75rem, env(safe-area-inset-top, 0px));
+  padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
 }
 
 .pb-safe {
-  padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
 }
 
 .mt-safe {
-  margin-top: max(1.75rem, env(safe-area-inset-top, 0px));
+  margin-top: max(0.75rem, env(safe-area-inset-top, 0px));
 }
 
 /* Fluid sync container for APK mobile and Tablet responsive layout */

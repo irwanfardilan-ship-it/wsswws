@@ -41,6 +41,10 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Restore Gradle Wrapper JAR
+        run: |
+          curl -L https://github.com/gradle/gradle/raw/main/gradle/wrapper/gradle-wrapper.jar -o android/gradle/wrapper/gradle-wrapper.jar
+
       - name: Synchronize Capacitor Project
         run: npx cap sync
 

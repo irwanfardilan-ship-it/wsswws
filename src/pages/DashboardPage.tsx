@@ -52,11 +52,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ setActiveTab }) =>
     };
   }, []);
 
-  // Calculate my stats
-  const totalVisits = reports.reduce((acc, curr) => acc + (curr.visit || 0), 0);
-  const totalApplicants = reports.reduce((acc, curr) => acc + (curr.applicant || 0), 0);
-  const totalQuality = reports.reduce((acc, curr) => acc + (curr.quality || 0), 0);
-  const totalPostings = reports.reduce((acc, curr) => acc + (curr.posting || 0), 0);
+  // Calculate my stats - only from approved (ACC) reports
+  const approvedReports = reports.filter(curr => curr.result === 'ACC');
+  const totalVisits = approvedReports.reduce((acc, curr) => acc + (curr.visit || 0), 0);
+  const totalApplicants = approvedReports.reduce((acc, curr) => acc + (curr.applicant || 0), 0);
+  const totalQuality = approvedReports.reduce((acc, curr) => acc + (curr.quality || 0), 0);
+  const totalPostings = approvedReports.reduce((acc, curr) => acc + (curr.posting || 0), 0);
 
   const quickMenus = [
     {
@@ -263,7 +264,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ setActiveTab }) =>
               </span>
             </div>
             <span className="text-[10px] text-slate-300 bg-slate-800 px-2.5 py-1 rounded-full font-semibold border border-slate-700/60 flex items-center gap-1">
-              <TrendingUp className="w-3 h-3 text-emerald-400" /> {reports.length} Laporan
+              <TrendingUp className="w-3 h-3 text-emerald-400" /> {approvedReports.length} Laporan ACC
             </span>
           </div>
 

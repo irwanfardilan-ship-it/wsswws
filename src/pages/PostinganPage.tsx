@@ -192,7 +192,7 @@ export const PostinganPage: React.FC = () => {
     const normalizedToday = normalizeDate(today);
 
     const todayReports = reports.filter((r) => {
-      return r.telegramId === effectiveTelegramId && normalizeDate(r.date || '') === normalizedToday;
+      return r.telegramId === effectiveTelegramId && normalizeDate(r.date || '') === normalizedToday && r.result === 'ACC';
     });
 
     if (todayReports.length === 0) return 0;

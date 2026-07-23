@@ -305,9 +305,45 @@ export const AdminPage: React.FC = () => {
               <p><strong className="text-slate-400">WhatsApp:</strong> {selectedUser.whatsapp}</p>
               <p><strong className="text-slate-400">UID 9Kucing:</strong> {selectedUser.akun9Kucing}</p>
               <p><strong className="text-slate-400">Role:</strong> {selectedUser.role}</p>
-              <p><strong className="text-slate-400">Status:</strong> {selectedUser.status}</p>
+              <p><strong className="text-slate-400">Status:</strong> <StatusBadge status={selectedUser.status} size="sm" /></p>
               <p><strong className="text-slate-400">Disetujui Oleh:</strong> {selectedUser.approvedBy || '-'}</p>
               <p><strong className="text-slate-400">Waktu Persetujuan:</strong> {selectedUser.approvedAt ? formatWIBDateTime(selectedUser.approvedAt) : '-'}</p>
+            </div>
+
+            {/* Quick Actions inside Modal */}
+            <div className="pt-3 border-t border-slate-800 space-y-2">
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Ubah Status Recruiter:</span>
+              <div className="flex flex-wrap gap-2">
+                {selectedUser.status !== 'Active' && (
+                  <button
+                    disabled={actionLoading}
+                    onClick={() => handleUpdateStatus(selectedUser.telegramId, 'Active')}
+                    className="flex-1 min-w-[100px] px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer transition-colors"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Approve
+                  </button>
+                )}
+
+                {selectedUser.status !== 'Rejected' && (
+                  <button
+                    disabled={actionLoading}
+                    onClick={() => handleUpdateStatus(selectedUser.telegramId, 'Rejected')}
+                    className="flex-1 min-w-[100px] px-3 py-2 rounded-xl bg-rose-600/80 hover:bg-rose-600 text-white text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer transition-colors"
+                  >
+                    <XCircle className="w-3.5 h-3.5" /> Reject
+                  </button>
+                )}
+
+                {selectedUser.status !== 'Suspended' && (
+                  <button
+                    disabled={actionLoading}
+                    onClick={() => handleUpdateStatus(selectedUser.telegramId, 'Suspended')}
+                    className="flex-1 min-w-[100px] px-3 py-2 rounded-xl bg-slate-800 hover:bg-amber-600/80 text-amber-300 text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer transition-colors"
+                  >
+                    <AlertTriangle className="w-3.5 h-3.5" /> Suspend
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="pt-2">

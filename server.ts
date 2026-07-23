@@ -244,7 +244,7 @@ app.post('/api/telegram/webhook', async (req: Request, res: Response) => {
       const firstName = msg.from?.first_name || 'Teman';
       
       let responseText = `👋 <b>Halo, ${firstName}! Selamat datang di AzurLizeTeam Bot!</b>\n\n`;
-      responseText += `Saya adalah bot asisten resmi untuk <b>AzurLizeTeam</b>.\n\n`;
+      responseText += `Saya adalah bot asisten untuk <b>AzurLizeTeam</b>.\n\n`;
       responseText += `🚀 <b>Mini Web App kami sudah siap digunakan!</b> Anda dapat mengelola laporan harian, memantau data pelamar, memeriksa postingan harian, dan melihat statistik performa secara langsung dan real-time.\n\n`;
       responseText += `📱 <b>Cara membuka Mini Web App:</b>\n`;
       responseText += `• Klik tombol <b>"Buka Mini App"</b> di bawah ini.\n`;

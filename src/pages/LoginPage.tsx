@@ -256,7 +256,7 @@ export const LoginPage: React.FC = () => {
               <div className="space-y-1">
                 <p className="text-sm font-bold text-white">Akun Telegram Tidak Terdeteksi</p>
                 <p className="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
-                  Sistem tidak dapat mendeteksi kredensial Telegram Anda. Silakan buka aplikasi ini secara resmi melalui Telegram Bot Anda.
+                  Sistem tidak dapat mendeteksi kredensial Telegram Anda. Silakan buka aplikasi ini melalui Telegram Bot Anda.
                 </p>
               </div>
             </div>

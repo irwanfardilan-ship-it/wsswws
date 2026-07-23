@@ -284,7 +284,7 @@ export const OwnerPage: React.FC = () => {
 
               <textarea
                 rows={3}
-                placeholder="Isi Pengumuman Resmi..."
+                placeholder="Isi Pengumuman..."
                 value={annContent}
                 onChange={(e) => setAnnContent(e.target.value)}
                 className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-amber-500"

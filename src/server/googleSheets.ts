@@ -62,6 +62,22 @@ export async function getOrCreateSpreadsheet(): Promise<{ id: string; url: strin
       const file = res.data.files[0];
       cachedSpreadsheetId = file.id!;
       cachedSpreadsheetUrl = file.webViewLink || `https://docs.google.com/spreadsheets/d/${file.id}`;
+
+      // Auto-share with ghrryuuka@gmail.com so they can find it in 'Shared with me'
+      try {
+        await drive.permissions.create({
+          fileId: cachedSpreadsheetId,
+          requestBody: {
+            role: 'writer',
+            type: 'user',
+            emailAddress: 'ghrryuuka@gmail.com'
+          }
+        });
+        console.log('[Google Sheets] Auto-shared existing spreadsheet with ghrryuuka@gmail.com');
+      } catch (shareErr) {
+        console.warn('[Google Sheets] Failed to auto-share existing spreadsheet:', shareErr);
+      }
+
       return { id: cachedSpreadsheetId, url: cachedSpreadsheetUrl };
     }
   } catch (err) {
@@ -94,6 +110,21 @@ export async function getOrCreateSpreadsheet(): Promise<{ id: string; url: strin
 
     const spreadsheetId = created.data.spreadsheetId!;
     const spreadsheetUrl = created.data.spreadsheetUrl || `https://docs.google.com/spreadsheets/d/${spreadsheetId}`;
+
+    // Auto-share with ghrryuuka@gmail.com so they can find it in 'Shared with me'
+    try {
+      await drive.permissions.create({
+        fileId: spreadsheetId,
+        requestBody: {
+          role: 'writer',
+          type: 'user',
+          emailAddress: 'ghrryuuka@gmail.com'
+        }
+      });
+      console.log('[Google Sheets] Auto-shared new spreadsheet with ghrryuuka@gmail.com');
+    } catch (shareErr) {
+      console.warn('[Google Sheets] Failed to auto-share new spreadsheet:', shareErr);
+    }
 
     // 3. Add Headers to "Data ACC"
     await sheets.spreadsheets.values.update({

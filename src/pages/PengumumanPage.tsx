@@ -51,7 +51,7 @@ export const PengumumanPage: React.FC = () => {
             <Megaphone className="w-10 h-10 text-slate-600 mx-auto" />
             <p className="text-sm font-semibold text-slate-300">Belum Ada Pengumuman</p>
             <p className="text-xs text-slate-500">
-              Pengumuman resmi dari Admin dan Owner akan muncul di sini.
+              Pengumuman dari Admin dan Owner akan muncul di sini.
             </p>
           </GlassCard>
         ) : (

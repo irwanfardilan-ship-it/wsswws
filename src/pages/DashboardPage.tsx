@@ -90,7 +90,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ setActiveTab }) =>
     {
       id: 'pengumuman' as TabType,
       title: 'Pengumuman',
-      desc: 'Instruksi resmi tim',
+      desc: 'Instruksi tim',
       icon: BellRing,
       color: 'from-amber-400 via-orange-500 to-rose-500',
       glow: 'shadow-orange-500/20 hover:shadow-orange-500/40',

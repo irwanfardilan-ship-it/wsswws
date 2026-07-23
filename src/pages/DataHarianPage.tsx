@@ -714,8 +714,9 @@ export const DataHarianPage: React.FC = () => {
       // Check duplicate using our firestore service
       const duplicateRecord = await checkReportDuplicate(formData.uid9Kucing, finalTg);
       if (duplicateRecord) {
+        const cleanRecUsername = duplicateRecord.recruiterUsername ? duplicateRecord.recruiterUsername.replace(/^@/, '') : 'Recruiter';
         setError(
-          `⚠️ DUPLIKAT TERDETEKSI: Data dengan UID "${formData.uid9Kucing}" atau Username Telegram "${finalTg}" sudah pernah diinput oleh recruiter @${duplicateRecord.recruiterUsername} pada tanggal ${duplicateRecord.date} (Grup: ${duplicateRecord.grup}, Status: ${duplicateRecord.result}).`
+          `⚠️ DUPLIKAT TERDETEKSI: Data dengan UID "${formData.uid9Kucing}" atau Username Telegram "${finalTg}" sudah pernah diinput oleh recruiter @${cleanRecUsername} pada tanggal ${duplicateRecord.date} (Grup: ${duplicateRecord.grup}, Status: ${duplicateRecord.result}).`
         );
         triggerHaptic('notification');
         setIsCheckingDuplicate(false);
@@ -1554,7 +1555,7 @@ export const DataHarianPage: React.FC = () => {
               </div>
               <div className="flex justify-between py-1 border-b border-slate-900/50">
                 <span className="text-slate-500 font-bold">Rekomendasi dari :</span>
-                <span className="text-purple-400 font-bold">@{autoRecruiterUsername}</span>
+                <span className="text-purple-400 font-bold">@{autoRecruiterUsername.replace(/^@/, '')}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-900/50">
                 <span className="text-slate-500 font-bold">Info dari sosmed :</span>

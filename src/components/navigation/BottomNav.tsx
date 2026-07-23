@@ -70,7 +70,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, setActiveTab })
     {
       id: 'pengumuman' as TabType,
       label: 'Pengumuman',
-      desc: 'Instruksi resmi tim',
+      desc: 'Instruksi tim',
       icon: Megaphone,
       color: 'from-amber-500/20 to-orange-600/10 text-amber-400 border-amber-500/30'
     }
@@ -146,7 +146,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, setActiveTab })
                         {userProfile?.role && <StatusBadge role={userProfile.role} size="sm" />}
                       </div>
                       <p className="text-[11px] font-medium text-slate-400 truncate">
-                        @{userProfile?.username || telegramUser?.username || 'user'}
+                        @{ (userProfile?.username || telegramUser?.username || 'user').replace(/^@/, '') }
                       </p>
                     </div>
                   </div>

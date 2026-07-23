@@ -26,7 +26,7 @@ export const BrowserNoticePage: React.FC = () => {
             Akses Khusus Telegram Bot
           </h2>
           <p className="text-xs text-slate-300 leading-relaxed">
-            Aplikasi rekrutmen <strong className="text-sky-400 font-bold">AzurLizeTeam</strong> dikhususkan untuk dibuka melalui Telegram Mini App dari Bot resmi kami.
+            Aplikasi rekrutmen <strong className="text-sky-400 font-bold">AzurLizeTeam</strong> dikhususkan untuk dibuka melalui Telegram Mini App dari Bot kami.
           </p>
         </div>
 

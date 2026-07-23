@@ -9,6 +9,7 @@ import { DailyReportFormData, DailyReport, SystemSettings } from '../types';
 import { formatUsername, formatWIBDate, getWIBDate, getWIBMonday, formatDateWithDay } from '../utils/format';
 import { subscribeToSystemSettings } from '../firebase/services/settingService';
 import { sendReportToTelegramApi } from '../services/api';
+import { checkReportDuplicate } from '../firebase/services/reportService';
 import { 
   CalendarClock, 
   CheckCircle2, 
@@ -537,6 +538,9 @@ export const DataHarianPage: React.FC = () => {
 
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [showReview, setShowReview] = useState<boolean>(false);
+  const [isCheckingDuplicate, setIsCheckingDuplicate] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   // Telegram Username Real-time Status
   const [tgStatus, setTgStatus] = useState<{
@@ -692,13 +696,48 @@ export const DataHarianPage: React.FC = () => {
 
     if (!formData.applicantWhatsapp) {
       setError('Nomor WA Pelamar wajib diisi.');
+      triggerHaptic('notification');
       return;
     }
 
     if (!formData.uid9Kucing) {
       setError('UID 9kucing wajib diisi.');
+      triggerHaptic('notification');
       return;
     }
+
+    setIsCheckingDuplicate(true);
+    try {
+      const parsedTg = parseTelegramUsername(formData.applicantTelegramUsername);
+      const finalTg = parsedTg.formatted || formData.applicantTelegramUsername.trim();
+
+      // Check duplicate using our firestore service
+      const duplicateRecord = await checkReportDuplicate(formData.uid9Kucing, finalTg);
+      if (duplicateRecord) {
+        setError(
+          `⚠️ DUPLIKAT TERDETEKSI: Data dengan UID "${formData.uid9Kucing}" atau Username Telegram "${finalTg}" sudah pernah diinput oleh recruiter @${duplicateRecord.recruiterUsername} pada tanggal ${duplicateRecord.date} (Grup: ${duplicateRecord.grup}, Status: ${duplicateRecord.result}).`
+        );
+        triggerHaptic('notification');
+        setIsCheckingDuplicate(false);
+        return;
+      }
+
+      // No duplicate, show Review Modal
+      setShowReview(true);
+      triggerHaptic('selection');
+    } catch (err) {
+      console.error('Error in duplicate check:', err);
+      // Fallback: let them submit/review anyway
+      setShowReview(true);
+    } finally {
+      setIsCheckingDuplicate(false);
+    }
+  };
+
+  const handleConfirmSubmit = async () => {
+    setError(null);
+    setSuccessMsg(null);
+    setIsSubmitting(true);
 
     try {
       const parsedTg = parseTelegramUsername(formData.applicantTelegramUsername);
@@ -711,7 +750,6 @@ export const DataHarianPage: React.FC = () => {
         date: todayStr, // Ensure auto set date
         recruiterUsername: autoRecruiterUsername, // Ensure auto set recruiter username
         applicantTelegramUsername: finalTg,
-        // Result is strictly 'Pending', Admin/Owner can set custom result later from the list
         result: 'Pending' as 'Pending' | 'ACC' | 'REJECT',
         grup: targetGrup
       };
@@ -740,6 +778,7 @@ export const DataHarianPage: React.FC = () => {
       }
 
       setSuccessMsg('Data Harian pelamar berhasil disimpan & tersinkron ke Telegram & Google Sheets!');
+      triggerHaptic('notification');
 
       // Reset candidate specific fields for next entry
       setFormData((prev) => ({
@@ -752,8 +791,13 @@ export const DataHarianPage: React.FC = () => {
         note: '',
         videoUrl: undefined
       }));
+      
+      setShowReview(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal menyimpan data harian.');
+      triggerHaptic('notification');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -931,6 +975,68 @@ export const DataHarianPage: React.FC = () => {
               <span className="text-amber-400 font-black flex items-center gap-0.5">
                 <Lock className="w-2.5 h-2.5 shrink-0" /> Pending
               </span>
+            </div>
+          </div>
+
+          {/* Upload Video Bukti FIRST ("VIDEO LEBIH DULU") */}
+          <div className="p-4 rounded-2xl border border-slate-800 bg-slate-950/40 space-y-3">
+            <label className="text-xs font-black tracking-wider text-slate-400 uppercase flex items-center gap-1.5">
+              <span>🎥</span>
+              <span>Bukti Video Pelamar</span>
+              <span className="text-[9px] bg-sky-500/10 text-sky-400 px-2.5 py-0.5 rounded-full font-black border border-sky-500/20 uppercase tracking-widest ml-auto">VIDEO LEBIH DULU</span>
+            </label>
+            
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <div className="w-full sm:w-1/2">
+                <input
+                  type="file"
+                  accept="video/*"
+                  id="bukti-video-input"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (ev) => {
+                        setFormData({ ...formData, videoUrl: ev.target?.result as string });
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  className="hidden"
+                />
+                <label
+                  htmlFor="bukti-video-input"
+                  className="flex flex-col items-center justify-center border-2 border-dashed border-slate-800 hover:border-sky-500/50 bg-slate-900/60 hover:bg-slate-900/90 rounded-2xl p-5 text-center cursor-pointer transition-all group w-full"
+                >
+                  <span className="text-2xl mb-1.5 group-hover:scale-110 transition-transform duration-200">📁</span>
+                  <span className="text-xs font-bold text-slate-200">Pilih / Seret Video</span>
+                  <span className="text-[10px] text-slate-500 font-medium mt-0.5">Format video (mp4, mov, avi)</span>
+                </label>
+              </div>
+
+              <div className="w-full sm:w-1/2">
+                {formData.videoUrl ? (
+                  <div className="relative rounded-2xl overflow-hidden border border-slate-800 bg-black aspect-video flex items-center justify-center shadow-inner group">
+                    <video
+                      src={formData.videoUrl}
+                      controls
+                      className="w-full h-full object-contain"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, videoUrl: undefined })}
+                      className="absolute top-2 right-2 p-1.5 rounded-xl bg-rose-500 text-white hover:bg-rose-600 transition-colors shadow-md text-xs font-bold flex items-center gap-1"
+                    >
+                      <span>Hapus</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-slate-800/80 bg-slate-900/20 aspect-video flex flex-col items-center justify-center text-center p-4 w-full">
+                    <span className="text-xl text-slate-600 mb-1">📼</span>
+                    <p className="text-xs text-slate-500 font-medium">Belum ada video bukti yang dipilih.</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -1208,82 +1314,57 @@ export const DataHarianPage: React.FC = () => {
             );
           })()}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            {/* 7. Grup (Recruiter = T0 & V0, Admin/Owner = T0, V0, T3) */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold tracking-wider text-slate-400 uppercase px-1 flex items-center justify-between">
-                <span className="flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5 text-purple-400" />
-                  <span>Grup</span>
-                </span>
-              </label>
-              <div className="grid grid-cols-3 gap-1.5">
-                {(['T0', 'V0'] as const).map((g) => (
-                  <button
-                    key={g}
-                    type="button"
-                    onClick={() => {
-                      setFormData({ ...formData, grup: g });
-                      triggerHaptic('selection');
-                    }}
-                    className={`py-2 px-2 rounded-xl text-xs font-black border transition-all flex items-center justify-center gap-1 ${
-                      formData.grup === g
-                        ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white border-sky-400 shadow-md'
-                        : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700'
-                    }`}
-                  >
-                    <span>Grup {g}</span>
-                  </button>
-                ))}
+          {/* 7. Grup Selection (Recruiter = T0 & V0, Admin/Owner = T0, V0, T3) */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold tracking-wider text-slate-400 uppercase px-1 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-purple-400" />
+                <span>Grup / Penempatan</span>
+              </span>
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {(['T0', 'V0'] as const).map((g) => (
+                <button
+                  key={g}
+                  type="button"
+                  onClick={() => {
+                    setFormData({ ...formData, grup: g });
+                    triggerHaptic('selection');
+                  }}
+                  className={`py-2.5 px-3 rounded-xl text-xs font-black border transition-all flex items-center justify-center gap-1 ${
+                    formData.grup === g
+                      ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white border-sky-400 shadow-md'
+                      : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700 hover:text-white'
+                  }`}
+                >
+                  <span>Grup {g}</span>
+                </button>
+              ))}
 
-                {isAdminOrOwner ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFormData({ ...formData, grup: 'T3' });
-                      triggerHaptic('selection');
-                    }}
-                    className={`py-2 px-2 rounded-xl text-xs font-black border transition-all flex items-center justify-center gap-1 ${
-                      formData.grup === 'T3'
-                        ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white border-sky-400 shadow-md'
-                        : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700'
-                    }`}
-                  >
-                    <span>Grup T3</span>
-                  </button>
-                ) : (
-                  <div
-                    title="Khusus Admin & Owner"
-                    className="py-2 px-2 rounded-xl text-xs font-bold border border-slate-800/80 bg-slate-950/50 text-slate-500 opacity-60 flex items-center justify-center gap-1 cursor-not-allowed"
-                  >
-                    <Lock className="w-3 h-3 text-slate-500" />
-                    <span>T3 (Admin)</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Upload Video Bukti */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-bold tracking-wider text-slate-400 uppercase px-1 flex items-center gap-1.5">
-                <span className="w-3.5 h-3.5 text-slate-400">🎥</span>
-                <span>Bukti Video</span>
-              </label>
-              <input
-                type="file"
-                accept="video/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                      setFormData({ ...formData, videoUrl: ev.target?.result as string });
-                    };
-                    reader.readAsDataURL(file);
-                  }
-                }}
-                className="w-full text-xs text-slate-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[10px] file:font-bold file:bg-sky-500/20 file:text-sky-400 hover:file:bg-sky-500/30 border border-slate-800/80 rounded-xl p-1 bg-slate-900/40"
-              />
+              {isAdminOrOwner ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData({ ...formData, grup: 'T3' });
+                    triggerHaptic('selection');
+                  }}
+                  className={`py-2.5 px-3 rounded-xl text-xs font-black border transition-all flex items-center justify-center gap-1 ${
+                    formData.grup === 'T3'
+                      ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white border-sky-400 shadow-md'
+                      : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700 hover:text-white'
+                  }`}
+                >
+                  <span>Grup T3</span>
+                </button>
+              ) : (
+                <div
+                  title="Khusus Admin & Owner"
+                  className="py-2.5 px-3 rounded-xl text-xs font-bold border border-slate-800/80 bg-slate-950/50 text-slate-500 opacity-60 flex items-center justify-center gap-1 cursor-not-allowed"
+                >
+                  <Lock className="w-3 h-3 text-slate-500" />
+                  <span>T3 (Admin)</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1305,7 +1386,7 @@ export const DataHarianPage: React.FC = () => {
           <Button
             type="submit"
             fullWidth
-            isLoading={isLoading}
+            isLoading={isLoading || isCheckingDuplicate}
             icon={<Sparkles className="w-4 h-4" />}
             className="mt-2"
           >
@@ -1407,6 +1488,108 @@ export const DataHarianPage: React.FC = () => {
             </>
           )}
         </GlassCard>
+      )}
+
+      {/* Tinjau Data Modal/Overlay ("VIDEO LEBIH DULU TRUS DATA") */}
+      {showReview && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5"
+          >
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-sky-500/10 text-sky-400">
+                  <Sparkles className="w-5 h-5 animate-pulse" />
+                </div>
+                <h3 className="text-base font-black text-white uppercase tracking-wider">
+                  Tinjau Laporan Harian
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowReview(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Video Preview First ("VIDEO LEBIH DULU") */}
+            <div className="space-y-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                <span>🎥 Video Bukti</span>
+              </span>
+              {formData.videoUrl ? (
+                <div className="relative rounded-2xl overflow-hidden border border-slate-800/80 bg-black aspect-video max-h-48 flex items-center justify-center shadow-inner">
+                  <video
+                    src={formData.videoUrl}
+                    controls
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-slate-800 bg-slate-950/40 p-4 text-center text-xs text-slate-500">
+                  Tidak ada video bukti yang dilampirkan.
+                </div>
+              )}
+            </div>
+
+            {/* Text Data Second ("TRUS DATA") */}
+            <div className="space-y-3 bg-slate-950/60 p-4.5 rounded-2xl border border-slate-900/80 text-xs sm:text-sm font-mono text-slate-300">
+              <div className="flex justify-between py-1 border-b border-slate-900/50">
+                <span className="text-slate-500 font-bold">UID :</span>
+                <span className="text-amber-400 font-bold">{formData.uid9Kucing}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-slate-900/50">
+                <span className="text-slate-500 font-bold">WA :</span>
+                <span className="text-emerald-400 font-bold">{formData.applicantWhatsapp}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-slate-900/50">
+                <span className="text-slate-500 font-bold">Username Telegram :</span>
+                <span className="text-sky-400 font-bold">
+                  {formData.applicantTelegramUsername ? `@${formData.applicantTelegramUsername.replace(/^@/, '')}` : '-'}
+                </span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-slate-900/50">
+                <span className="text-slate-500 font-bold">Rekomendasi dari :</span>
+                <span className="text-purple-400 font-bold">@{autoRecruiterUsername}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-slate-900/50">
+                <span className="text-slate-500 font-bold">Info dari sosmed :</span>
+                <span className="text-pink-400 font-bold">{formData.channel || '-'}</span>
+              </div>
+              <div className="flex justify-between py-1 pt-1.5">
+                <span className="text-slate-500 font-bold">Grub :</span>
+                <span className="text-indigo-400 font-extrabold bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">{formData.grup}</span>
+              </div>
+            </div>
+
+            {/* Buttons */}
+            <div className="flex gap-3 pt-2">
+              <Button
+                type="button"
+                variant="secondary"
+                fullWidth
+                onClick={() => setShowReview(false)}
+                className="rounded-2xl py-3 border-slate-800 text-slate-300 hover:text-white"
+              >
+                Batal &amp; Edit
+              </Button>
+              <Button
+                type="button"
+                fullWidth
+                onClick={handleConfirmSubmit}
+                isLoading={isSubmitting}
+                icon={<Send className="w-4 h-4" />}
+                className="rounded-2xl py-3 shadow-lg"
+              >
+                Kirim Sekarang
+              </Button>
+            </div>
+          </motion.div>
+        </div>
       )}
     </motion.div>
   );

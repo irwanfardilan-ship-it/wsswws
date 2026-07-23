@@ -104,6 +104,51 @@ export async function updateReportStatus(reportId: string, result: 'Pending' | '
   }
 }
 
+export async function checkReportDuplicate(
+  uid9Kucing: string,
+  applicantTelegramUsername: string
+): Promise<DailyReport | null> {
+  const reportsRef = collection(db, COLLECTION_NAME);
+  
+  const cleanTg = applicantTelegramUsername ? applicantTelegramUsername.trim().replace(/^@/, '').toLowerCase() : '';
+  const cleanUid = uid9Kucing ? uid9Kucing.trim() : '';
+
+  if (!cleanUid && !cleanTg) return null;
+
+  try {
+    if (cleanUid) {
+      const qUid = query(reportsRef, where('uid9Kucing', '==', cleanUid));
+      const snapUid = await getDocs(qUid);
+      if (!snapUid.empty) {
+        return snapUid.docs[0].data() as DailyReport;
+      }
+    }
+
+    if (cleanTg) {
+      // Check exact match
+      const qTg = query(reportsRef, where('applicantTelegramUsername', '==', cleanTg));
+      const snapTg = await getDocs(qTg);
+      if (!snapTg.empty) {
+        return snapTg.docs[0].data() as DailyReport;
+      }
+
+      // Check with @ prefix
+      const qTgWithAt = query(reportsRef, where('applicantTelegramUsername', '==', `@${cleanTg}`));
+      const snapTgWithAt = await getDocs(qTgWithAt);
+      if (!snapTgWithAt.empty) {
+        return snapTgWithAt.docs[0].data() as DailyReport;
+      }
+
+      // Check case-insensitively by fetching or comparing if needed, but standard query with exact or @ is highly reliable for our formatted data.
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error checking report duplicate:', error);
+    return null;
+  }
+}
+
 export async function getAllReports(): Promise<DailyReport[]> {
   try {
     const reportsRef = collection(db, COLLECTION_NAME);

@@ -37,7 +37,8 @@ import {
   UserX,
   Archive,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ChevronDown
 } from 'lucide-react';
 import { triggerHaptic } from '../telegram/webapp';
 
@@ -370,6 +371,7 @@ export const DataHarianPage: React.FC = () => {
   const { reports, submitReport, updateStatus, isLoading } = useReports();
   const [activeTab, setActiveTab] = useState<'formulir' | 'minggu_ini' | 'pemeriksaan' | 'arsip'>('formulir');
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [isChannelDropdownOpen, setIsChannelDropdownOpen] = useState<boolean>(false);
   const ITEMS_PER_PAGE = 10;
 
   useEffect(() => {
@@ -941,31 +943,80 @@ export const DataHarianPage: React.FC = () => {
             </div>
           </div>
 
-          {/* 3. Channels (Options with Real Platform SVG Icons) */}
-          <div className="space-y-2">
+          {/* 3. Channels Custom Dropdown */}
+          <div className="space-y-1.5 relative">
             <label className="text-xs font-bold tracking-wider text-slate-400 uppercase px-1 flex items-center gap-2">
               <Share2 className="w-3.5 h-3.5 text-indigo-400" />
               <span>Channel / Platform</span>
             </label>
-            <div className="grid grid-cols-3 sm:grid-cols-3 gap-2">
-              {CHANNELS.map((ch) => {
-                const isSelected = formData.channel === ch.id;
-                return (
-                  <button
-                    key={ch.id}
-                    type="button"
-                    onClick={() => setFormData({ ...formData, channel: ch.id })}
-                    className={`py-2 px-2 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 ${
-                      isSelected
-                        ? `${ch.activeBg} border-transparent shadow-lg scale-[1.02]`
-                        : `${ch.color} hover:bg-white/5`
-                    }`}
+            
+            <div className="relative">
+              {/* Dropdown Trigger Button */}
+              <button
+                key="channel-dropdown-trigger"
+                type="button"
+                onClick={() => {
+                  setIsChannelDropdownOpen(!isChannelDropdownOpen);
+                  triggerHaptic('selection');
+                }}
+                className="w-full rounded-2xl py-3 px-4 text-sm font-semibold border border-slate-800 bg-slate-900/80 hover:bg-slate-800/60 text-slate-100 flex items-center justify-between transition-all duration-200 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
+              >
+                <div className="flex items-center gap-2.5">
+                  {formData.channel ? (
+                    <>
+                      <ChannelPlatformIcon id={formData.channel} className="w-4 h-4 shrink-0" />
+                      <span>{CHANNELS.find(c => c.id === formData.channel)?.label || formData.channel}</span>
+                    </>
+                  ) : (
+                    <span className="text-slate-500">Pilih Channel / Platform</span>
+                  )}
+                </div>
+                <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isChannelDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Dropdown Options Panel */}
+              {isChannelDropdownOpen && (
+                <>
+                  {/* Backdrop Click Handler to Close */}
+                  <div 
+                    key="channel-dropdown-backdrop"
+                    className="fixed inset-0 z-40" 
+                    onClick={() => setIsChannelDropdownOpen(false)} 
+                  />
+                  
+                  {/* Options Container */}
+                  <div 
+                    key="channel-dropdown-options"
+                    className="absolute left-0 right-0 mt-1.5 rounded-2xl border border-slate-800/90 bg-slate-950/95 backdrop-blur-xl shadow-2xl z-50 py-1.5 max-h-64 overflow-y-auto divide-y divide-slate-900/50"
                   >
-                    <ChannelPlatformIcon id={ch.id} />
-                    <span className="truncate">{ch.label}</span>
-                  </button>
-                );
-              })}
+                    {CHANNELS.map((ch) => {
+                      const isSelected = formData.channel === ch.id;
+                      return (
+                        <button
+                          key={ch.id}
+                          type="button"
+                          onClick={() => {
+                            setFormData({ ...formData, channel: ch.id });
+                            setIsChannelDropdownOpen(false);
+                            triggerHaptic('selection');
+                          }}
+                          className={`w-full text-left px-4 py-2.5 text-xs font-bold transition-all flex items-center justify-between hover:bg-slate-900 ${
+                            isSelected 
+                              ? 'text-sky-400 bg-sky-500/5' 
+                              : 'text-slate-300 hover:text-white'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <ChannelPlatformIcon id={ch.id} className="w-4 h-4 shrink-0" />
+                            <span>{ch.label}</span>
+                          </div>
+                          {isSelected && <Check className="w-3.5 h-3.5 text-sky-400" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -985,10 +1036,12 @@ export const DataHarianPage: React.FC = () => {
             <Input
               label="UID 9kucing"
               type="text"
-              placeholder="Contoh: 9K-88231"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              placeholder="Contoh: 88231"
               icon={<Hash className="w-4 h-4 text-amber-400" />}
               value={formData.uid9Kucing}
-              onChange={(e) => setFormData({ ...formData, uid9Kucing: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, uid9Kucing: e.target.value.replace(/\D/g, '') })}
               required
             />
 

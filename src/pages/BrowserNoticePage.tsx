@@ -12,7 +12,7 @@ export const BrowserNoticePage: React.FC = () => {
       }}
       className="min-h-screen flex flex-col items-center justify-center p-5 text-center transition-colors duration-300 bg-mesh-gradient overflow-x-hidden"
     >
-      <GlassCard className="max-w-md w-full p-6 space-y-6 border-sky-500/30 shadow-2xl">
+      <GlassCard className="max-w-md w-full p-6 space-y-6 border border-slate-800/80 shadow-sm">
         <div className="flex justify-center">
           <AzurLizeLogo size="lg" />
         </div>

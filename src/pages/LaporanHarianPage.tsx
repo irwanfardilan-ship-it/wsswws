@@ -74,7 +74,7 @@ export const LaporanHarianPage: React.FC = () => {
         </p>
       </div>
 
-      <GlassCard className="border-sky-500/20 shadow-2xl">
+      <GlassCard className="border-slate-800/80 shadow-sm">
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <div className="bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs p-3.5 rounded-2xl flex items-center gap-2 font-medium">

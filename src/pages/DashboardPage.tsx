@@ -137,9 +137,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ setActiveTab }) =>
       className="space-y-5 pb-24"
     >
       {/* Welcome User Banner */}
-      <GlassCard className="relative overflow-hidden border-sky-500/30 bg-gradient-to-br from-slate-900/95 via-slate-900/80 to-blue-950/60 p-5 shadow-2xl">
-        <div className="absolute -top-12 -right-12 w-40 h-40 bg-sky-500/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-indigo-500/15 rounded-full blur-2xl pointer-events-none" />
+      <GlassCard className="relative overflow-hidden border border-slate-200/10 bg-slate-900/60 p-5 shadow-sm">
+        <div className="absolute -top-12 -right-12 w-40 h-40 bg-sky-500/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none" />
 
         <div className="flex items-center gap-4 relative z-10">
           <div className="relative shrink-0">
@@ -147,28 +147,28 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ setActiveTab }) =>
               <img
                 src={telegramUser.photo_url}
                 alt="Profile"
-                className="w-16 h-16 rounded-2xl object-cover border-2 border-sky-400/50 shadow-xl shadow-sky-500/20"
+                className="w-16 h-16 rounded-xl object-cover border border-white/10 shadow-sm"
               />
             ) : (
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-sky-500 via-blue-600 to-indigo-600 flex items-center justify-center text-white text-2xl font-black shadow-xl shadow-sky-500/20 border border-white/20">
+              <div className="w-16 h-16 rounded-xl bg-blue-600 flex items-center justify-center text-white text-2xl font-bold shadow-sm border border-white/10">
                 {(userProfile?.firstName?.[0] || telegramUser?.first_name?.[0] || 'A').toUpperCase()}
               </div>
             )}
-            <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-slate-950 shadow-md" />
+            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-slate-950 shadow-sm" />
           </div>
 
           <div className="flex flex-col overflow-hidden">
-            <div className="flex items-center gap-1.5 text-[11px] font-bold text-sky-400 tracking-wider uppercase">
-              <Sparkles className="w-3.5 h-3.5" /> Selamat Datang 👋
+            <div className="flex items-center gap-1 text-[11px] font-semibold text-sky-400 uppercase tracking-wider">
+              <Sparkles className="w-3 h-3" /> Selamat Datang
             </div>
-            <h2 className="text-lg font-black text-white truncate tracking-tight mt-0.5">
+            <h2 className="text-lg font-bold text-white truncate tracking-tight mt-0.5">
               {userProfile?.firstName} {userProfile?.lastName}
             </h2>
             <span className="text-xs text-slate-400 font-medium">
               {formatUsername(userProfile?.username || telegramUser?.username)}
             </span>
 
-            <div className="flex items-center gap-2 mt-2">
+            <div className="flex items-center gap-1.5 mt-1.5">
               {userProfile?.role && <StatusBadge role={userProfile.role} size="sm" />}
               {userProfile?.status && <StatusBadge status={userProfile.status} size="sm" />}
             </div>
@@ -178,11 +178,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ setActiveTab }) =>
 
       {/* System Announcement Banner */}
       {announcementHeader && (
-        <GlassCard className="bg-gradient-to-r from-blue-950/60 via-indigo-950/60 to-slate-900/90 p-4 border-blue-500/30 flex items-center gap-3">
-          <div className="p-2.5 rounded-2xl bg-blue-500/20 text-blue-400 shrink-0 border border-blue-500/30">
-            <Megaphone className="w-5 h-5 animate-pulse" />
+        <GlassCard className="bg-slate-900/40 p-4 border border-slate-800/80 flex items-center gap-3 shadow-sm">
+          <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400 shrink-0 border border-blue-500/20">
+            <Megaphone className="w-4 h-4" />
           </div>
-          <p className="text-xs text-slate-200 font-medium leading-relaxed">
+          <p className="text-xs text-slate-300 font-medium leading-relaxed">
             {announcementHeader}
           </p>
         </GlassCard>
@@ -191,55 +191,53 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ setActiveTab }) =>
       {/* Quick Menu Grid */}
       <div className="space-y-2.5">
         <div className="flex items-center justify-between px-1">
-          <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+          <h3 className="text-xs font-bold text-slate-400 tracking-wider flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-sky-400" />
             <span>Menu Utama Recruiter</span>
           </h3>
-          <span className="text-[10px] text-sky-400/80 font-bold bg-sky-500/10 px-2 py-0.5 rounded-full border border-sky-500/20">
+          <span className="text-[10px] text-sky-400/80 font-bold bg-sky-500/10 px-2.5 py-0.5 rounded-full border border-sky-500/20">
             AzurLize System
           </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-3.5">
+        <div className="grid grid-cols-2 gap-3">
           {quickMenus.map((menu) => {
             const Icon = menu.icon;
+            // Map our gradient to solid colors for standard iOS style
+            let bgSolid = 'bg-blue-600';
+            if (menu.id === 'data_harian') bgSolid = 'bg-emerald-500';
+            else if (menu.id === 'laporan') bgSolid = 'bg-sky-500';
+            else if (menu.id === 'riwayat') bgSolid = 'bg-indigo-500';
+            else if (menu.id === 'pengumuman') bgSolid = 'bg-orange-500';
+            else if (menu.id === 'profil') bgSolid = 'bg-teal-500';
+            else if (menu.id === 'admin') bgSolid = 'bg-purple-500';
+            else if (menu.id === 'owner') bgSolid = 'bg-rose-500';
+
             return (
               <GlassCard
                 key={menu.id}
                 hoverable
                 onClick={() => setActiveTab(menu.id)}
-                className="p-4 space-y-3 flex flex-col justify-between group border-white/10 hover:border-sky-500/50 relative overflow-hidden transition-all duration-300 shadow-xl"
+                className="p-4 space-y-3 flex flex-col justify-between group border-white/5 bg-slate-900/40 hover:border-slate-700/50 relative overflow-hidden transition-all duration-200 shadow-sm"
               >
-                {/* Background ambient glow effect on hover */}
-                <div className={`absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-gradient-to-br ${menu.color} opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-500 pointer-events-none`} />
-
                 <div className="flex items-center justify-between relative z-10">
-                  <div className="relative">
-                    {/* Glowing halo ring */}
-                    <div className={`absolute -inset-1 rounded-2xl bg-gradient-to-r ${menu.color} opacity-40 group-hover:opacity-100 blur transition duration-300`} />
-                    
-                    <div className={`w-12 h-12 rounded-2xl bg-slate-950/90 flex items-center justify-center text-white relative border border-white/20 shadow-xl group-hover:scale-105 group-hover:-rotate-3 transition-transform duration-300`}>
-                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-tr ${menu.color} flex items-center justify-center text-white shadow-md`}>
-                        <Icon className="w-5 h-5 drop-shadow-md text-white" />
-                      </div>
-                    </div>
+                  <div className={`w-10 h-10 rounded-xl ${bgSolid} flex items-center justify-center text-white shadow-sm transition-transform duration-200`}>
+                    <Icon className="w-5 h-5 text-white" />
                   </div>
 
                   {menu.badge && (
-                    <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-900/90 text-sky-400 border border-sky-500/30 shadow-md backdrop-blur-md">
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-950/80 text-sky-400 border border-slate-800 shadow-sm">
                       {menu.badge}
                     </span>
                   )}
                 </div>
 
                 <div className="relative z-10 pt-1">
-                  <h4 className="text-sm font-black text-white group-hover:text-sky-300 transition-colors flex items-center justify-between">
+                  <h4 className="text-sm font-bold text-white group-hover:text-sky-300 transition-colors flex items-center justify-between">
                     <span>{menu.title}</span>
-                    <div className="p-1 rounded-lg bg-white/5 group-hover:bg-sky-500/20 group-hover:text-sky-300 transition-all">
-                      <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-300 group-hover:translate-x-0.5 transition-transform" />
-                    </div>
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-sky-400 group-hover:translate-x-0.5 transition-transform" />
                   </h4>
-                  <p className="text-[11px] font-medium text-slate-400 mt-0.5 line-clamp-1">{menu.desc}</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">{menu.desc}</p>
                 </div>
               </GlassCard>
             );

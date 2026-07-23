@@ -232,7 +232,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, setActiveTab })
           style={{
             backgroundColor: 'var(--tg-secondary-bg-color, var(--tg-bg-color, rgba(15, 23, 42, 0.96)))'
           }}
-          className="w-full max-w-xl mx-auto pointer-events-auto backdrop-blur-2xl border border-slate-200 dark:border-white/15 rounded-3xl p-1.5 shadow-2xl flex items-center justify-between shadow-sky-500/10 transition-colors duration-300"
+          className="w-full max-w-xl mx-auto pointer-events-auto backdrop-blur-2xl border border-slate-200/10 dark:border-white/5 rounded-2xl p-1 shadow-sm flex items-center justify-between"
         >
           {/* Primary 4 Buttons */}
           {primaryTabs.map((item) => {
@@ -243,26 +243,15 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, setActiveTab })
               <button
                 key={item.id}
                 onClick={() => handleTabClick(item.id)}
-                className={`flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-2xl transition-all duration-300 relative ${
-                  isActive
-                    ? 'text-sky-500 dark:text-sky-400 font-black bg-gradient-to-b from-sky-500/20 to-blue-600/10 border border-sky-500/30 shadow-lg shadow-sky-500/15'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5'
-                }`}
+                className="flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-colors duration-200 relative"
               >
                 <div className="relative flex items-center justify-center">
-                  {isActive && (
-                    <span className="absolute inset-0 rounded-full bg-sky-400/20 blur-sm -z-10 animate-pulse" />
-                  )}
-                  <Icon className={`w-5 h-5 transition-all duration-300 ${isActive ? 'scale-110 text-sky-500 dark:text-sky-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.8)]' : 'scale-100'}`} />
+                  <Icon className={`w-5 h-5 transition-transform duration-200 ${isActive ? 'scale-105 text-blue-500 dark:text-blue-400' : 'scale-100 text-slate-500 dark:text-slate-400'}`} />
                 </div>
 
-                <span className={`text-[10px] md:text-[11px] tracking-tight mt-1 font-bold truncate max-w-full ${isActive ? 'text-sky-500 dark:text-sky-300' : 'text-slate-500 dark:text-slate-400'}`}>
+                <span className={`text-[10px] md:text-[11px] tracking-tight mt-1 font-medium truncate max-w-full ${isActive ? 'text-blue-500 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400'}`}>
                   {item.label}
                 </span>
-
-                {isActive && (
-                  <span className="absolute -bottom-1 w-6 h-1 bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-500 rounded-full shadow-md shadow-sky-400/80" />
-                )}
               </button>
             );
           })}
@@ -270,26 +259,15 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, setActiveTab })
           {/* 5th Dynamic Menu Button */}
           <button
             onClick={handleMenuToggle}
-            className={`flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-2xl transition-all duration-300 relative ${
-              isSecondaryActive || isMenuOpen
-                ? 'text-sky-500 dark:text-sky-400 font-black bg-gradient-to-b from-sky-500/20 to-blue-600/10 border border-sky-500/30 shadow-lg shadow-sky-500/15'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5'
-            }`}
+            className="flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-colors duration-200 relative"
           >
             <div className="relative flex items-center justify-center">
-              {(isSecondaryActive || isMenuOpen) && (
-                <span className="absolute inset-0 rounded-full bg-sky-400/20 blur-sm -z-10 animate-pulse" />
-              )}
-              <FifthIcon className={`w-5 h-5 transition-all duration-300 ${isSecondaryActive || isMenuOpen ? 'scale-110 text-sky-500 dark:text-sky-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.8)]' : 'scale-100'}`} />
+              <FifthIcon className={`w-5 h-5 transition-transform duration-200 ${isSecondaryActive || isMenuOpen ? 'scale-105 text-blue-500 dark:text-blue-400' : 'scale-100 text-slate-500 dark:text-slate-400'}`} />
             </div>
 
-            <span className={`text-[10px] md:text-[11px] tracking-tight mt-1 font-bold truncate max-w-full ${isSecondaryActive || isMenuOpen ? 'text-sky-500 dark:text-sky-300' : 'text-slate-500 dark:text-slate-400'}`}>
+            <span className={`text-[10px] md:text-[11px] tracking-tight mt-1 font-medium truncate max-w-full ${isSecondaryActive || isMenuOpen ? 'text-blue-500 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400'}`}>
               {fifthButtonLabel}
             </span>
-
-            {(isSecondaryActive || isMenuOpen) && (
-              <span className="absolute -bottom-1 w-6 h-1 bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-500 rounded-full shadow-md shadow-sky-400/80" />
-            )}
           </button>
         </nav>
       </div>

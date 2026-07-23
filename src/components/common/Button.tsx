@@ -34,11 +34,11 @@ export const Button: React.FC<ButtonProps> = ({
   const getVariantStyles = () => {
     switch (variant) {
       case 'primary':
-        return 'bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25 border border-blue-400/30 hover:brightness-110';
+        return 'bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white border border-blue-500/20 shadow-sm';
       case 'secondary':
-        return 'bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700';
+        return 'bg-slate-800/90 hover:bg-slate-800 text-slate-200 border border-slate-700/60 shadow-sm';
       case 'danger':
-        return 'bg-rose-600 text-white shadow-lg shadow-rose-600/20 border border-rose-400/30 hover:bg-rose-500';
+        return 'bg-rose-600 hover:bg-rose-500 active:bg-rose-700 text-white border border-rose-600/20 shadow-sm';
       case 'ghost':
         return 'bg-transparent text-slate-300 hover:bg-slate-800/40 border border-transparent';
       default:
@@ -49,10 +49,10 @@ export const Button: React.FC<ButtonProps> = ({
   return (
     <motion.button
       type={type}
-      whileTap={{ scale: disabled || isLoading ? 1 : 0.97 }}
+      whileTap={{ scale: disabled || isLoading ? 1 : 0.98 }}
       onClick={handleClick}
       disabled={disabled || isLoading}
-      className={`rounded-2xl py-3.5 px-6 font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 ${getVariantStyles()} ${
+      className={`rounded-xl py-3 px-5 font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 ${getVariantStyles()} ${
         fullWidth ? 'w-full' : ''
       } ${disabled || isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${className}`}
     >

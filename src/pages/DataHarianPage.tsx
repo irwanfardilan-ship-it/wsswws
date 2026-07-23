@@ -869,14 +869,14 @@ export const DataHarianPage: React.FC = () => {
       {activeTab === 'formulir' && (
         <>
           {/* Countdown Card */}
-      <GlassCard className="relative overflow-hidden border-sky-500/30 bg-gradient-to-br from-slate-900/95 via-slate-900/90 to-blue-950/70 p-4 shadow-2xl">
+      <GlassCard className="relative overflow-hidden border-slate-800/80 bg-slate-900/40 p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-2.5">
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-sky-500/20 text-sky-400 border border-sky-500/30">
-              <Clock className="w-4 h-4 animate-pulse" />
+            <div className="p-2 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20">
+              <Clock className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-xs font-extrabold text-white uppercase tracking-wider">Sisa Waktu Hari Ini</h3>
+              <h3 className="text-xs font-bold text-white uppercase tracking-wider">Sisa Waktu Hari Ini</h3>
               <p className="text-[10px] text-slate-400 font-medium">
                 {!hasReportToday ? 'Belum input data hari ini' : 'Data hari ini telah tersimpan'}
               </p>
@@ -894,28 +894,28 @@ export const DataHarianPage: React.FC = () => {
         </div>
 
         {/* Countdown Display */}
-        <div className="py-2.5 px-3 rounded-2xl bg-slate-950/90 border border-sky-500/20 flex flex-col items-center justify-center space-y-1 my-1 shadow-inner">
+        <div className="py-2.5 px-3 rounded-2xl bg-slate-950/60 border border-slate-800/80 flex flex-col items-center justify-center space-y-1 my-1">
           <span className="text-[9px] font-bold tracking-widest text-slate-400 uppercase">
             Pergantian Hari dalam (23:59:59)
           </span>
 
-          <div className="flex items-center gap-2 text-white font-mono font-black text-xl sm:text-2xl tracking-wider">
+          <div className="flex items-center gap-2 text-white font-mono font-bold text-xl sm:text-2xl tracking-wider">
             <div className="flex flex-col items-center">
-              <span className="bg-slate-900 px-2.5 py-1 rounded-xl border border-sky-500/30 text-sky-400">
+              <span className="bg-slate-900 px-2.5 py-1 rounded-xl border border-slate-800/80 text-sky-400">
                 {hours}
               </span>
               <span className="text-[8px] font-sans text-slate-400 mt-0.5 font-semibold">Jam</span>
             </div>
             <span className="text-sky-500 font-sans font-bold -mt-3">:</span>
             <div className="flex flex-col items-center">
-              <span className="bg-slate-900 px-2.5 py-1 rounded-xl border border-sky-500/30 text-sky-300">
+              <span className="bg-slate-900 px-2.5 py-1 rounded-xl border border-slate-800/80 text-sky-300">
                 {minutes}
               </span>
               <span className="text-[8px] font-sans text-slate-400 mt-0.5 font-semibold">Menit</span>
             </div>
             <span className="text-sky-500 font-sans font-bold -mt-3">:</span>
             <div className="flex flex-col items-center">
-              <span className="bg-slate-900 px-2.5 py-1 rounded-xl border border-sky-500/30 text-sky-200">
+              <span className="bg-slate-900 px-2.5 py-1 rounded-xl border border-slate-800/80 text-sky-200">
                 {seconds}
               </span>
               <span className="text-[8px] font-sans text-slate-400 mt-0.5 font-semibold">Detik</span>
@@ -934,7 +934,7 @@ export const DataHarianPage: React.FC = () => {
       </GlassCard>
 
       {/* Main Form Data Harian */}
-      <GlassCard className="border-sky-500/20 shadow-2xl space-y-4">
+      <GlassCard className="border-slate-800/80 shadow-sm space-y-4">
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
             <FileText className="w-4 h-4 text-sky-400" />
@@ -1086,7 +1086,7 @@ export const DataHarianPage: React.FC = () => {
                     {/* Options Container */}
                     <div 
                       key="channel-dropdown-options"
-                      className="absolute left-0 right-0 mt-1.5 rounded-2xl border border-slate-800/90 bg-slate-950/95 backdrop-blur-xl shadow-2xl z-50 py-1.5 max-h-64 overflow-y-auto divide-y divide-slate-900/50"
+                      className="absolute left-0 right-0 mt-1.5 rounded-2xl border border-slate-800/90 bg-slate-950/95 backdrop-blur-xl shadow-md z-50 py-1.5 max-h-64 overflow-y-auto divide-y divide-slate-900/50"
                     >
                       {CHANNELS.map((ch) => {
                         const isSelected = formData.channel === ch.id;
@@ -1497,7 +1497,7 @@ export const DataHarianPage: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5"
+            className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm space-y-5"
           >
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">

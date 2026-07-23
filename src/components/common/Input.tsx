@@ -19,7 +19,7 @@ export const Input: React.FC<InputProps> = ({
   return (
     <div className="flex flex-col gap-1.5 w-full">
       {label && (
-        <label className="text-xs font-semibold tracking-wide text-slate-400 uppercase px-1">
+        <label className="text-xs font-semibold text-slate-400 px-1">
           {label}
         </label>
       )}
@@ -31,14 +31,14 @@ export const Input: React.FC<InputProps> = ({
         )}
         <input
           readOnly={readOnly}
-          className={`w-full rounded-2xl py-3 px-4 ${
+          className={`w-full rounded-xl py-3 px-4 ${
             icon ? 'pl-11' : 'pl-4'
           } text-sm font-medium transition-all duration-200 outline-none border text-slate-100 placeholder:text-slate-500 ${
             readOnly
               ? 'bg-slate-900/40 border-slate-800 text-slate-500 cursor-not-allowed'
               : error
-              ? 'border-rose-500/80 bg-rose-500/10 focus:ring-2 focus:ring-rose-500/30'
-              : 'border-slate-800 bg-slate-900/80 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20'
+              ? 'border-rose-500/80 bg-rose-500/10 focus:ring-1 focus:ring-rose-500/30'
+              : 'border-slate-800 bg-slate-900/80 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20'
           } ${className}`}
           {...props}
         />

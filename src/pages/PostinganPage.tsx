@@ -1164,7 +1164,7 @@ export const PostinganPage: React.FC = () => {
             className="space-y-3"
           >
             {activeView === 'minggu_ini' && (
-              <div className="space-y-3 p-3.5 rounded-2xl bg-slate-950/90 border border-slate-800/90 shadow-2xl">
+              <div className="space-y-3 p-3.5 rounded-2xl bg-slate-950/90 border border-slate-800/90 shadow-sm">
                 <div className="flex items-center justify-between px-0.5">
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center shrink-0">
@@ -1331,7 +1331,7 @@ export const PostinganPage: React.FC = () => {
 
             {/* Pagination Controls (10 item per halaman) */}
             {posts.length > 0 && (
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 rounded-2xl bg-slate-950/90 border border-slate-800/90 shadow-2xl mt-4">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 rounded-2xl bg-slate-950/90 border border-slate-800/90 shadow-sm mt-4">
                 <div className="text-[10px] font-bold text-slate-400 text-center sm:text-left">
                   Menampilkan <span className="text-white font-black">{Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, posts.length)} - {Math.min(currentPage * ITEMS_PER_PAGE, posts.length)}</span> dari <span className="text-white font-black">{posts.length}</span> postingan
                 </div>

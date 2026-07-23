@@ -35,8 +35,11 @@ import {
   Loader2,
   AlertTriangle,
   UserX,
-  Archive
+  Archive,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
+import { triggerHaptic } from '../telegram/webapp';
 
 // Channel Platform Real SVG Icons
 const ChannelPlatformIcon: React.FC<{ id: string; className?: string }> = ({ id, className = "w-4 h-4 shrink-0" }) => {
@@ -366,6 +369,12 @@ export const DataHarianPage: React.FC = () => {
   const { userProfile, telegramUser } = useAuth();
   const { reports, submitReport, updateStatus, isLoading } = useReports();
   const [activeTab, setActiveTab] = useState<'formulir' | 'minggu_ini' | 'pemeriksaan' | 'arsip'>('formulir');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const ITEMS_PER_PAGE = 10;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab]);
 
   const isAdminOrOwner = userProfile?.role === 'Admin' || userProfile?.role === 'Owner';
   const telegramId = userProfile?.telegramId || String(telegramUser?.id || '');
@@ -408,6 +417,98 @@ export const DataHarianPage: React.FC = () => {
   const reportsArsip = useMemo(() => {
     return userReports.filter(r => r.date < lastMondayStr);
   }, [userReports, lastMondayStr]);
+
+  const paginatedReportsMingguIni = useMemo(() => {
+    return reportsMingguIni.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  }, [reportsMingguIni, currentPage, ITEMS_PER_PAGE]);
+
+  const paginatedReportsPemeriksaan = useMemo(() => {
+    return reportsPemeriksaan.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  }, [reportsPemeriksaan, currentPage, ITEMS_PER_PAGE]);
+
+  const paginatedReportsArsip = useMemo(() => {
+    return reportsArsip.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  }, [reportsArsip, currentPage, ITEMS_PER_PAGE]);
+
+  const renderPagination = (totalItems: number) => {
+    if (totalItems <= ITEMS_PER_PAGE) return null;
+    const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+
+    return (
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 rounded-2xl bg-slate-950/90 border border-slate-800/90 shadow-xl mt-4">
+        <div className="text-[10px] font-bold text-slate-400 text-center sm:text-left">
+          Menampilkan <span className="text-white font-black">{Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, totalItems)} - {Math.min(currentPage * ITEMS_PER_PAGE, totalItems)}</span> dari <span className="text-white font-black">{totalItems}</span> data
+        </div>
+        
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => {
+              if (currentPage > 1) {
+                setCurrentPage(prev => prev - 1);
+                triggerHaptic('selection');
+              }
+            }}
+            disabled={currentPage === 1}
+            className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase transition-all flex items-center gap-1 border ${
+              currentPage === 1
+                ? 'bg-slate-900/40 text-slate-600 border-slate-800/40 cursor-not-allowed'
+                : 'bg-slate-900 text-sky-400 border-slate-700 hover:bg-slate-800 hover:text-white shadow-sm cursor-pointer'
+            }`}
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+            Prev
+          </button>
+
+          <div className="flex items-center gap-1">
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+              .map((p, idx, arr) => {
+                const showDots = idx > 0 && p - arr[idx - 1] > 1;
+                return (
+                  <React.Fragment key={p}>
+                    {showDots && <span className="text-slate-600 text-[10px] px-0.5">..</span>}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCurrentPage(p);
+                        triggerHaptic('selection');
+                      }}
+                      className={`w-7 h-7 rounded-xl text-[10px] font-black transition-all border ${
+                        currentPage === p
+                          ? 'bg-sky-500 text-slate-950 border-sky-400 shadow-md shadow-sky-500/20'
+                          : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white cursor-pointer'
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  </React.Fragment>
+                );
+              })}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (currentPage < totalPages) {
+                setCurrentPage(prev => prev + 1);
+                triggerHaptic('selection');
+              }
+            }}
+            disabled={currentPage === totalPages}
+            className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase transition-all flex items-center gap-1 border ${
+              currentPage === totalPages
+                ? 'bg-slate-900/40 text-slate-600 border-slate-800/40 cursor-not-allowed'
+                : 'bg-slate-900 text-sky-400 border-slate-700 hover:bg-slate-800 hover:text-white shadow-sm cursor-pointer'
+            }`}
+          >
+            Next
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   // Check if submitted report today
   const hasReportToday = useMemo(() => {
@@ -1236,11 +1337,14 @@ export const DataHarianPage: React.FC = () => {
           {reportsMingguIni.length === 0 ? (
             <div className="text-center py-6 text-xs text-slate-500 font-medium">Belum ada data minggu ini.</div>
           ) : (
-            <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
-              {reportsMingguIni.map((rep, idx) => (
-                <ReportListCard key={rep.reportId || idx} rep={rep} isAdminOrOwner={isAdminOrOwner} onUpdateStatus={updateStatus} />
-              ))}
-            </div>
+            <>
+              <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+                {paginatedReportsMingguIni.map((rep, idx) => (
+                  <ReportListCard key={rep.reportId || idx} rep={rep} isAdminOrOwner={isAdminOrOwner} onUpdateStatus={updateStatus} />
+                ))}
+              </div>
+              {renderPagination(reportsMingguIni.length)}
+            </>
           )}
         </GlassCard>
       )}
@@ -1264,11 +1368,14 @@ export const DataHarianPage: React.FC = () => {
           {reportsPemeriksaan.length === 0 ? (
             <div className="text-center py-6 text-xs text-slate-500 font-medium">Tidak ada data minggu lalu.</div>
           ) : (
-            <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
-              {reportsPemeriksaan.map((rep, idx) => (
-                <ReportListCard key={rep.reportId || idx} rep={rep} isAdminOrOwner={isAdminOrOwner} onUpdateStatus={updateStatus} />
-              ))}
-            </div>
+            <>
+              <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+                {paginatedReportsPemeriksaan.map((rep, idx) => (
+                  <ReportListCard key={rep.reportId || idx} rep={rep} isAdminOrOwner={isAdminOrOwner} onUpdateStatus={updateStatus} />
+                ))}
+              </div>
+              {renderPagination(reportsPemeriksaan.length)}
+            </>
           )}
         </GlassCard>
       )}
@@ -1292,11 +1399,14 @@ export const DataHarianPage: React.FC = () => {
           {reportsArsip.length === 0 ? (
             <div className="text-center py-6 text-xs text-slate-500 font-medium">Tidak ada data di arsip.</div>
           ) : (
-            <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
-              {reportsArsip.map((rep, idx) => (
-                <ReportListCard key={rep.reportId || idx} rep={rep} isAdminOrOwner={isAdminOrOwner} onUpdateStatus={updateStatus} />
-              ))}
-            </div>
+            <>
+              <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+                {paginatedReportsArsip.map((rep, idx) => (
+                  <ReportListCard key={rep.reportId || idx} rep={rep} isAdminOrOwner={isAdminOrOwner} onUpdateStatus={updateStatus} />
+                ))}
+              </div>
+              {renderPagination(reportsArsip.length)}
+            </>
           )}
         </GlassCard>
       )}

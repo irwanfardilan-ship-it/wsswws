@@ -104,10 +104,19 @@ const CHANNELS = [
 ];
 
 const detectStartNumber = (text: string): number | null => {
-  const match = text.match(/(?:^|\s|\n|\r)(?:No\.?\s*|ke\-)?(\d+)(?:[\s\.\)\:\-\]]+)(https?:\/\/[^\s]+)/i);
-  if (match) {
-    const num = parseInt(match[1], 10);
-    if (!isNaN(num)) return num;
+  const lines = text.split('\n');
+  for (const line of lines) {
+    const trimmed = line.trim();
+    const httpIndex = trimmed.toLowerCase().indexOf('http');
+    if (httpIndex !== -1) {
+      // Find any numbers before 'http' in this line
+      const prefix = trimmed.substring(0, httpIndex);
+      const numMatch = prefix.match(/(\d+)/);
+      if (numMatch) {
+        const num = parseInt(numMatch[1], 10);
+        if (!isNaN(num)) return num;
+      }
+    }
   }
   return null;
 };
@@ -268,6 +277,7 @@ export const PostinganPage: React.FC = () => {
   // Live countdown to midnight (00:00)
   const [timeRemainingMs, setTimeRemainingMs] = useState<number>(0);
   const [elapsedPercent, setElapsedPercent] = useState<number>(100);
+  const [currentHour, setCurrentHour] = useState<number>(0);
 
   useEffect(() => {
     const updateTimer = () => {
@@ -298,12 +308,17 @@ export const PostinganPage: React.FC = () => {
 
       setTimeRemainingMs(Math.max(0, diff));
       setElapsedPercent(pct);
+      setCurrentHour(parts.hour || 0);
     };
 
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  const isTimeRestricted = useMemo(() => {
+    return currentHour >= 21 && currentHour < 24;
+  }, [currentHour]);
 
   const formatTime = (ms: number) => {
     if (ms <= 0) return { hours: '00', minutes: '00', seconds: '00' };
@@ -514,6 +529,11 @@ export const PostinganPage: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    if (isTimeRestricted) {
+      setStatus({ type: 'error', message: 'Pengiriman ditutup antara pukul 21:00 WIB dan 00:00 WIB.' });
+      return;
+    }
+
     const validLinks = links.filter(l => l.url.trim() !== '');
     if (validLinks.length === 0) {
       setStatus({ type: 'error', message: 'Minimal masukkan 1 link postingan.' });
@@ -722,8 +742,58 @@ export const PostinganPage: React.FC = () => {
             animate={{ opacity: 1, x: 0 }}
             className="space-y-4"
           >
-            {/* Syarat Target Postingan Harian (Berpatokan Data Harian) */}
-            <GlassCard className="p-4 space-y-3.5 bg-slate-950/80 border-slate-800 shadow-xl relative overflow-hidden">
+            {isTimeRestricted ? (
+              <GlassCard className="p-8 text-center space-y-6 border-rose-500/30 bg-rose-500/5 relative overflow-hidden py-12">
+                <div className="absolute top-0 right-0 p-3 opacity-5">
+                  <Clock className="w-32 h-32 text-rose-500" />
+                </div>
+                
+                <div className="w-20 h-20 rounded-full bg-rose-500/10 border border-rose-500/30 flex items-center justify-center mx-auto text-rose-400 animate-pulse shadow-lg">
+                  <Clock className="w-10 h-10" />
+                </div>
+                
+                <div className="space-y-2 max-w-md mx-auto">
+                  <h3 className="text-lg font-black text-white tracking-tight">
+                    Pengiriman Postingan Ditutup 🔒
+                  </h3>
+                  <p className="text-xs text-rose-200/80 leading-relaxed font-medium">
+                    Batas waktu pengiriman postingan harian adalah pukul <strong className="text-rose-300">21:00 WIB</strong>. 
+                    Semua input pengiriman dikunci sementara dan akan otomatis dibuka kembali pada pukul <strong className="text-rose-300">00:00 WIB (Midnight)</strong>.
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800/80 max-w-sm mx-auto shadow-inner">
+                  <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider mb-2">
+                    Akan Dibuka Kembali Dalam:
+                  </p>
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="flex flex-col items-center">
+                      <span className="text-2xl font-black text-rose-400 tracking-tighter">{hours}</span>
+                      <span className="text-[7px] font-bold text-slate-500 uppercase mt-0.5">Jam</span>
+                    </div>
+                    <span className="text-lg font-black text-rose-500/40 -translate-y-1">:</span>
+                    <div className="flex flex-col items-center">
+                      <span className="text-2xl font-black text-rose-400 tracking-tighter">{minutes}</span>
+                      <span className="text-[7px] font-bold text-slate-500 uppercase mt-0.5">Menit</span>
+                    </div>
+                    <span className="text-lg font-black text-rose-500/40 -translate-y-1">:</span>
+                    <div className="flex flex-col items-center">
+                      <span className="text-2xl font-black text-rose-400 tracking-tighter">{seconds}</span>
+                      <span className="text-[7px] font-bold text-slate-500 uppercase mt-0.5">Detik</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <p className="text-[10px] text-slate-500 font-medium">
+                    Silakan kembali lagi nanti untuk mengirimkan batch postingan baru Anda.
+                  </p>
+                </div>
+              </GlassCard>
+            ) : (
+              <>
+                {/* Syarat Target Postingan Harian (Berpatokan Data Harian) */}
+                <GlassCard className="p-4 space-y-3.5 bg-slate-950/80 border-slate-800 shadow-xl relative overflow-hidden">
               <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
                 <div className="flex items-center gap-2.5">
                   <div className={`w-9 h-9 rounded-2xl bg-gradient-to-br ${targetRule.color} flex items-center justify-center shrink-0 border shadow-inner`}>
@@ -1187,8 +1257,10 @@ export const PostinganPage: React.FC = () => {
                 )}
             </GlassCard>
             </div>
-          </motion.div>
+          </>
         )}
+      </motion.div>
+    )}
 
         {/* History Views (Minggu Ini & Arsip) */}
         {(activeView === 'minggu_ini' || activeView === 'arsip') && (

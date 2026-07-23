@@ -68,9 +68,49 @@
   }
 }
 
-/* Safe area padding for Telegram WebApp / iOS Notch / Android Gesture Bars */
+/* Safe area padding for Telegram WebApp / iOS Notch / Android Status & Gesture Bars */
+.pt-safe {
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+}
+
 .pb-safe {
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.mt-safe {
+  margin-top: env(safe-area-inset-top);
+}
+
+/* Fluid sync container for APK mobile and Tablet responsive layout */
+.sync-container {
+  width: 100%;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (min-width: 640px) {
+  .sync-container {
+    max-width: 640px;
+  }
+}
+
+@media (min-width: 768px) {
+  .sync-container {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .sync-container {
+    max-width: 1024px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .sync-container {
+    max-width: 1280px;
+  }
 }
 
 ::-webkit-scrollbar {

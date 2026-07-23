@@ -8,6 +8,8 @@ interface AuthContextType extends AuthState {
   refreshProfile: () => Promise<UserProfile | null>;
   logout: () => void;
   continueLogin: () => Promise<void>;
+  loginManually: (telegramId: string, name: string, username?: string) => Promise<{ success: boolean; error?: string }>;
+  registerManually: (telegramId: string, name: string, username?: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -84,6 +86,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const inTelegram = isTelegramEnvironment();
 
     if (!inTelegram || !webApp) {
+      // Check if we have a persisted manual login in localStorage!
+      const savedUserStr = localStorage.getItem('azurlize_manual_user');
+      if (savedUserStr) {
+        try {
+          const savedUser = JSON.parse(savedUserStr);
+          if (savedUser && savedUser.id) {
+            const profile = await withTimeout(getUserProfile(String(savedUser.id)), 3500, null);
+            if (profile) {
+              await finishLoading({
+                isAuthenticated: true,
+                telegramUser: savedUser,
+                userProfile: profile,
+                token: 'manual_session_token',
+                initData: '',
+                error: null,
+                isTelegramContext: true
+              });
+              return;
+            }
+          }
+        } catch (e) {
+          console.error('Error loading manual user session:', e);
+        }
+      }
+
       await finishLoading({
         isAuthenticated: false,
         telegramUser: null,
@@ -214,6 +241,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
+    localStorage.removeItem('azurlize_manual_user');
     setState({
       isAuthenticated: false,
       isLoading: false,
@@ -224,6 +252,64 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       error: null,
       isTelegramContext: false
     });
+  };
+
+  const loginManually = async (telegramId: string, name: string, username?: string) => {
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+    try {
+      const profile = await withTimeout(getUserProfile(telegramId), 3500, null);
+      if (profile) {
+        const tgUser: TelegramUser = {
+          id: Number(telegramId),
+          first_name: name || profile.firstName || 'User',
+          last_name: profile.lastName || '',
+          username: username || profile.username || '',
+          photo_url: profile.photoUrl || ''
+        };
+        
+        // Save to localStorage
+        localStorage.setItem('azurlize_manual_user', JSON.stringify(tgUser));
+
+        setState({
+          isAuthenticated: true,
+          isLoading: false,
+          telegramUser: tgUser,
+          userProfile: profile,
+          token: 'manual_session_token',
+          initData: '',
+          error: null,
+          isTelegramContext: true
+        });
+        return { success: true };
+      } else {
+        setState((prev) => ({ ...prev, isLoading: false }));
+        return { success: false, error: 'ID Telegram belum terdaftar di sistem. Silakan pilih Daftar Akun Baru.' };
+      }
+    } catch (err) {
+      setState((prev) => ({ ...prev, isLoading: false }));
+      return { success: false, error: 'Gagal memverifikasi akun. Silakan periksa koneksi internet Anda.' };
+    }
+  };
+
+  const registerManually = (telegramId: string, name: string, username?: string) => {
+    const tgUser: TelegramUser = {
+      id: Number(telegramId),
+      first_name: name,
+      last_name: '',
+      username: username || '',
+      photo_url: ''
+    };
+    
+    // Save to localStorage so if they refresh, the register state stays active
+    localStorage.setItem('azurlize_manual_user', JSON.stringify(tgUser));
+
+    setState((prev) => ({
+      ...prev,
+      isAuthenticated: false,
+      telegramUser: tgUser,
+      userProfile: null,
+      isTelegramContext: true // Bypass BrowserNoticePage
+    }));
   };
 
   const continueLogin = async () => {
@@ -287,7 +373,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...state,
         refreshProfile,
         logout,
-        continueLogin
+        continueLogin,
+        loginManually,
+        registerManually
       }}
     >
       {children}

@@ -4,7 +4,7 @@ import { StatusBadge } from '../components/common/StatusBadge';
 import { formatUsername } from '../utils/format';
 import { Button } from '../components/common/Button';
 import { useRecruiters } from '../hooks/useRecruiters';
-import { Announcement, SystemSettings, UserRole } from '../types';
+import { Announcement, SystemSettings, UserRole, UserStatus } from '../types';
 import {
   getAnnouncements,
   createAnnouncement,
@@ -14,10 +14,10 @@ import {
   getSystemSettings,
   updateSystemSettings
 } from '../firebase/services/settingService';
-import { Key, Megaphone, Settings, Users, ShieldAlert, Plus, Trash2, CheckCircle2, BarChart2, Bot, Globe } from 'lucide-react';
+import { Key, Megaphone, Settings, Users, ShieldAlert, Plus, Trash2, CheckCircle2, BarChart2, Bot, Globe, XCircle, AlertTriangle } from 'lucide-react';
 
 export const OwnerPage: React.FC = () => {
-  const { users, changeRole, refetch: refetchUsers } = useRecruiters();
+  const { users, changeStatus, changeRole, refetch: refetchUsers } = useRecruiters();
 
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [settings, setSettings] = useState<SystemSettings | null>(null);
@@ -154,6 +154,15 @@ export const OwnerPage: React.FC = () => {
     }
   };
 
+  const handleStatusChange = async (telegramId: string, newStatus: UserStatus) => {
+    try {
+      await changeStatus(telegramId, newStatus);
+      await refetchUsers();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Gagal mengubah status');
+    }
+  };
+
   // Overall Statistics
   const totalUsers = users.length;
   const activeCount = users.filter((u) => u.status === 'Active').length;
@@ -240,23 +249,55 @@ export const OwnerPage: React.FC = () => {
                 <StatusBadge status={u.status} size="sm" />
               </div>
 
-              <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 text-xs">
-                <span className="text-slate-400 font-medium">Ubah Role Pengguna:</span>
-                <div className="flex items-center gap-1.5">
-                  {(['Recruiter', 'Admin', 'Owner'] as UserRole[]).map((roleOption) => (
-                    <button
-                      key={roleOption}
-                      disabled={u.role === roleOption}
-                      onClick={() => handleRoleChange(u.telegramId, roleOption)}
-                      className={`px-2.5 py-1 rounded-xl text-[11px] font-bold cursor-pointer ${
-                        u.role === roleOption
-                          ? 'bg-amber-500 text-slate-950'
-                          : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
-                      }`}
-                    >
-                      {roleOption}
-                    </button>
-                  ))}
+              <div className="flex flex-col gap-2 pt-2 border-t border-slate-800/80 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400 font-medium">Ubah Role Pengguna:</span>
+                  <div className="flex items-center gap-1.5">
+                    {(['Recruiter', 'Admin', 'Owner'] as UserRole[]).map((roleOption) => (
+                      <button
+                        key={roleOption}
+                        disabled={u.role === roleOption}
+                        onClick={() => handleRoleChange(u.telegramId, roleOption)}
+                        className={`px-2.5 py-1 rounded-xl text-[11px] font-bold cursor-pointer ${
+                          u.role === roleOption
+                            ? 'bg-amber-500 text-slate-950'
+                            : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                        }`}
+                      >
+                        {roleOption}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1 text-xs">
+                  <span className="text-slate-400 font-medium">Persetujuan Status:</span>
+                  <div className="flex items-center gap-1.5">
+                    {u.status !== 'Active' && (
+                      <button
+                        onClick={() => handleStatusChange(u.telegramId, 'Active')}
+                        className="px-2 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                      >
+                        <CheckCircle2 className="w-3 h-3" /> Approve
+                      </button>
+                    )}
+                    {u.status !== 'Rejected' && (
+                      <button
+                        onClick={() => handleStatusChange(u.telegramId, 'Rejected')}
+                        className="px-2 py-1 rounded-xl bg-rose-600/80 hover:bg-rose-600 text-white text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                      >
+                        <XCircle className="w-3 h-3" /> Reject
+                      </button>
+                    )}
+                    {u.status !== 'Suspended' && (
+                      <button
+                        onClick={() => handleStatusChange(u.telegramId, 'Suspended')}
+                        className="px-2 py-1 rounded-xl bg-slate-800 hover:bg-amber-600/80 text-amber-300 text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                      >
+                        <AlertTriangle className="w-3 h-3" /> Suspend
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </GlassCard>

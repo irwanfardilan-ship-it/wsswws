@@ -23,17 +23,23 @@ export function useReports() {
     
     setIsLoading(true);
     let unsubscribe: () => void;
+
+    const handleError = (err: any) => {
+      console.error('Error in useReports subscription:', err);
+      setError(err instanceof Error ? err.message : 'Gagal memuat data harian.');
+      setIsLoading(false);
+    };
     
     if (role === 'Admin' || role === 'Owner') {
       unsubscribe = subscribeToAllReports((data) => {
         setReports(data || []);
         setIsLoading(false);
-      });
+      }, handleError);
     } else {
       unsubscribe = subscribeToUserReports(String(telegramUserId), (data) => {
         setReports(data || []);
         setIsLoading(false);
-      });
+      }, handleError);
     }
     
     return () => {

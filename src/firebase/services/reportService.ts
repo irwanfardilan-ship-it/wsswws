@@ -14,23 +14,40 @@ import { DailyReport, DailyReportFormData } from '../../types';
 
 const COLLECTION_NAME = 'daily_reports';
 
-export function subscribeToUserReports(telegramId: string, onUpdate: (reports: DailyReport[]) => void): () => void {
+export function subscribeToUserReports(
+  telegramId: string, 
+  onUpdate: (reports: DailyReport[]) => void,
+  onError?: (error: Error) => void
+): () => void {
   const reportsRef = collection(db, COLLECTION_NAME);
   const q = query(
     reportsRef,
-    where('telegramId', '==', telegramId),
-    orderBy('createdAt', 'desc')
+    where('telegramId', '==', telegramId)
   );
 
   return onSnapshot(q, (snapshot) => {
     const reports = snapshot.docs.map((docSnap) => docSnap.data() as DailyReport);
+    // Sort in client-side JS to avoid Firestore composite index requirement
+    reports.sort((a, b) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return timeB - timeA;
+    });
     onUpdate(reports);
   }, (error) => {
     console.error('Error listening to user reports:', error);
+    if (onError) {
+      onError(error);
+    } else {
+      onUpdate([]);
+    }
   });
 }
 
-export function subscribeToAllReports(onUpdate: (reports: DailyReport[]) => void): () => void {
+export function subscribeToAllReports(
+  onUpdate: (reports: DailyReport[]) => void,
+  onError?: (error: Error) => void
+): () => void {
   const reportsRef = collection(db, COLLECTION_NAME);
   const q = query(reportsRef, orderBy('createdAt', 'desc'));
 
@@ -39,6 +56,11 @@ export function subscribeToAllReports(onUpdate: (reports: DailyReport[]) => void
     onUpdate(reports);
   }, (error) => {
     console.error('Error listening to all reports:', error);
+    if (onError) {
+      onError(error);
+    } else {
+      onUpdate([]);
+    }
   });
 }
 

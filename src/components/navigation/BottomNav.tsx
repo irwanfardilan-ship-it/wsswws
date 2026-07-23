@@ -71,7 +71,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, setActiveTab })
     }
   ];
 
-  if (userProfile?.role === 'Admin') {
+  if (userProfile?.role === 'Admin' || userProfile?.role === 'Owner') {
     secondaryMenuItems.unshift({
       id: 'admin' as TabType,
       label: 'Panel Admin',
@@ -79,7 +79,9 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, setActiveTab })
       icon: ShieldCheck,
       color: 'from-emerald-500/20 to-teal-600/10 text-emerald-400 border-emerald-500/30'
     });
-  } else if (userProfile?.role === 'Owner') {
+  }
+
+  if (userProfile?.role === 'Owner') {
     secondaryMenuItems.unshift({
       id: 'owner' as TabType,
       label: 'Panel Owner',

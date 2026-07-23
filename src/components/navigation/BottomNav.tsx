@@ -44,12 +44,13 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, setActiveTab })
     setIsMenuOpen(prev => !prev);
   };
 
-  // Primary 4 fixed tabs
+  // Primary 5 fixed tabs (including Gaji)
   const primaryTabs = [
     { id: 'beranda' as TabType, label: 'Beranda', icon: LayoutGrid },
     { id: 'postingan' as TabType, label: 'Postingan', icon: ClipboardPen },
     { id: 'data_harian' as TabType, label: 'Data Harian', icon: CalendarClock },
-    { id: 'laporan' as TabType, label: 'Laporan', icon: FileText }
+    { id: 'laporan' as TabType, label: 'Laporan', icon: FileText },
+    { id: 'gaji' as TabType, label: 'Gaji', icon: Coins }
   ];
 
   // Secondary menu items inside drawer
@@ -67,13 +68,6 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, setActiveTab })
       desc: 'Histori & arsip kinerja',
       icon: Clock3,
       color: 'from-indigo-500/20 to-purple-600/10 text-indigo-400 border-indigo-500/30'
-    },
-    {
-      id: 'gaji' as TabType,
-      label: 'Gaji Saya',
-      desc: 'Estimasi & rincian gaji',
-      icon: Coins,
-      color: 'from-emerald-500/20 to-teal-600/10 text-emerald-400 border-emerald-500/30'
     },
     {
       id: 'pengumuman' as TabType,

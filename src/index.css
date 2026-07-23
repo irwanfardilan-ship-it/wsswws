@@ -1,13 +1,22 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "SF Compact Display", "SF Compact Text", system-ui, sans-serif;
+}
+
 @layer base {
   :root {
-    font-family: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'SF Pro', system-ui, 'Plus Jakarta Sans', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "SF Compact Display", "SF Compact Text", system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
     font-size: 16px;
+  }
+
+  /* Force all elements to fall back to the premium iOS system font */
+  *, *::before, *::after, input, button, select, textarea {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "SF Compact Display", "SF Compact Text", system-ui, sans-serif !important;
   }
 
   /* Responsive base font scaling for Android, iPhone, Tablet & Laptop */
@@ -30,7 +39,7 @@
   }
 
   body {
-    font-family: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'SF Pro', system-ui, 'Plus Jakarta Sans', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "SF Compact Display", "SF Compact Text", system-ui, sans-serif;
     letter-spacing: -0.011em;
     overflow-x: hidden;
     background-color: var(--tg-bg-color, #030712);

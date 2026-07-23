@@ -1185,11 +1185,11 @@ export const PostinganPage: React.FC = () => {
                 </div>
 
                 {/* Day Buttons Grid Layout (Semua + 7 Hari) */}
-                <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5">
+                <div className="flex sm:grid sm:grid-cols-8 gap-1.5 overflow-x-auto pb-1.5 no-scrollbar -mx-2 px-2 sm:mx-0 sm:px-0">
                   {/* All Days Tile */}
                   <button
                     onClick={() => { setSelectedDay('Semua'); triggerHaptic('selection'); }}
-                    className={`p-2 rounded-xl text-center transition-all flex flex-col items-center justify-center gap-0.5 border relative ${
+                    className={`p-2 rounded-xl text-center transition-all flex flex-col items-center justify-center gap-0.5 border relative shrink-0 min-w-[76px] sm:min-w-0 flex-1 ${
                       selectedDay === 'Semua'
                         ? 'bg-gradient-to-b from-sky-500/30 to-blue-600/20 text-white border-sky-400 shadow-lg shadow-sky-500/15 ring-1 ring-sky-400/50'
                         : 'bg-slate-900/90 text-slate-400 border-slate-800 hover:text-white hover:bg-slate-800/80'
@@ -1209,7 +1209,7 @@ export const PostinganPage: React.FC = () => {
                       <button
                         key={wDay.dayName}
                         onClick={() => { setSelectedDay(wDay.dayName); triggerHaptic('selection'); }}
-                        className={`p-2 rounded-xl text-center transition-all flex flex-col items-center justify-center gap-0.5 border relative ${
+                        className={`p-2 rounded-xl text-center transition-all flex flex-col items-center justify-center gap-0.5 border relative shrink-0 min-w-[76px] sm:min-w-0 flex-1 ${
                           isSelected
                             ? 'bg-gradient-to-b from-sky-500/30 to-blue-600/20 text-white border-sky-400 shadow-lg shadow-sky-500/15 ring-1 ring-sky-400/50'
                             : wDay.isToday

@@ -6,7 +6,7 @@ import { Button } from '../components/common/Button';
 import { useReports } from '../hooks/useReports';
 import { useAuth } from '../hooks/useAuth';
 import { DailyReportFormData, DailyReport, SystemSettings } from '../types';
-import { formatUsername, formatWIBDate, getWIBDate, getWIBMonday } from '../utils/format';
+import { formatUsername, formatWIBDate, getWIBDate, getWIBMonday, formatDateWithDay } from '../utils/format';
 import { subscribeToSystemSettings } from '../firebase/services/settingService';
 import { sendReportToTelegramApi } from '../services/api';
 import { 
@@ -316,12 +316,29 @@ const ReportListCard: React.FC<{ rep: DailyReport, isAdminOrOwner: boolean, onUp
         </div>
       </div>
       
-      <div className="flex items-center gap-3 text-[10px] text-slate-400 pt-1">
-        <span>Tanggal: <strong className="text-slate-200">{formatWIBDate(rep.date)}</strong></span>
-        <span>UID: <strong className="text-slate-200">{rep.uid9Kucing || '-'}</strong></span>
-        <span>Channel: <strong className="text-slate-200">{rep.channel || '-'}</strong></span>
-        <span>Grup: <strong className="text-slate-200">{rep.grup || '-'}</strong></span>
-        {isAdminOrOwner && <span>Recruiter: <strong className="text-slate-200">{formatUsername(rep.recruiterUsername)}</strong></span>}
+      <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[10px] text-slate-400 pt-2 border-t border-slate-900/60 mt-1.5">
+        <div className="flex flex-col gap-0.5">
+          <span className="text-slate-500 font-semibold uppercase text-[8px] tracking-wider">Tanggal</span>
+          <strong className="text-slate-200">{formatDateWithDay(rep.date)}</strong>
+        </div>
+        <div className="flex flex-col gap-0.5">
+          <span className="text-slate-500 font-semibold uppercase text-[8px] tracking-wider">UID 9Kucing</span>
+          <strong className="text-slate-200">{rep.uid9Kucing || '-'}</strong>
+        </div>
+        <div className="flex flex-col gap-0.5">
+          <span className="text-slate-500 font-semibold uppercase text-[8px] tracking-wider">Channel</span>
+          <strong className="text-slate-200">{rep.channel || '-'}</strong>
+        </div>
+        <div className="flex flex-col gap-0.5">
+          <span className="text-slate-500 font-semibold uppercase text-[8px] tracking-wider">Grup</span>
+          <strong className="text-slate-200">{rep.grup || '-'}</strong>
+        </div>
+        {isAdminOrOwner && (
+          <div className="flex flex-col gap-0.5 col-span-2 pt-1.5 border-t border-slate-900/40 mt-1">
+            <span className="text-slate-500 font-semibold uppercase text-[8px] tracking-wider">Recruiter</span>
+            <strong className="text-slate-200">{formatUsername(rep.recruiterUsername)}</strong>
+          </div>
+        )}
       </div>
 
       {clean && (

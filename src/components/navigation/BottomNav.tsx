@@ -15,13 +15,14 @@ import {
   ChevronRight, 
   Sparkles,
   LogOut,
-  Moon
+  Moon,
+  Coins
 } from 'lucide-react';
 import { triggerHaptic } from '../../telegram/webapp';
 import { useAuth } from '../../hooks/useAuth';
 import { StatusBadge } from '../common/StatusBadge';
 
-export type TabType = 'beranda' | 'postingan' | 'laporan' | 'data_harian' | 'riwayat' | 'profil' | 'admin' | 'owner' | 'pengumuman';
+export type TabType = 'beranda' | 'postingan' | 'laporan' | 'data_harian' | 'riwayat' | 'profil' | 'admin' | 'owner' | 'pengumuman' | 'gaji';
 
 interface BottomNavProps {
   activeTab: TabType;
@@ -66,6 +67,13 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, setActiveTab })
       desc: 'Histori & arsip kinerja',
       icon: Clock3,
       color: 'from-indigo-500/20 to-purple-600/10 text-indigo-400 border-indigo-500/30'
+    },
+    {
+      id: 'gaji' as TabType,
+      label: 'Gaji Saya',
+      desc: 'Estimasi & rincian gaji',
+      icon: Coins,
+      color: 'from-emerald-500/20 to-teal-600/10 text-emerald-400 border-emerald-500/30'
     },
     {
       id: 'pengumuman' as TabType,

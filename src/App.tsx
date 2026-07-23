@@ -17,6 +17,7 @@ import { PostinganPage } from './pages/PostinganPage';
 import { ProfilPage } from './pages/ProfilPage';
 import { AdminPage } from './pages/AdminPage';
 import { OwnerPage } from './pages/OwnerPage';
+import { GajiPage } from './pages/GajiPage';
 import { MainLayout } from './layouts/MainLayout';
 import { TabType } from './components/navigation/BottomNav';
 import { GlassCard } from './components/common/GlassCard';
@@ -99,6 +100,8 @@ const AppContent: React.FC = () => {
         return <LaporanHarianPage />;
       case 'riwayat':
         return <RiwayatLaporanPage />;
+      case 'gaji':
+        return <GajiPage />;
       case 'pengumuman':
         return <PengumumanPage />;
       case 'profil':

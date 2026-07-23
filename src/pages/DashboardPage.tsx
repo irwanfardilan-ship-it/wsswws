@@ -22,7 +22,8 @@ import {
   Megaphone, 
   Users, 
   Sparkles, 
-  TrendingUp 
+  TrendingUp,
+  Coins
 } from 'lucide-react';
 
 interface DashboardPageProps {
@@ -86,6 +87,15 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ setActiveTab }) =>
       color: 'from-blue-500 via-indigo-500 to-purple-600',
       glow: 'shadow-indigo-500/20 hover:shadow-indigo-500/40',
       badge: `${reports.length} Data`
+    },
+    {
+      id: 'gaji' as TabType,
+      title: 'Gaji Saya',
+      desc: 'Estimasi & rincian gaji',
+      icon: Coins,
+      color: 'from-teal-400 via-emerald-500 to-green-600',
+      glow: 'shadow-emerald-500/20 hover:shadow-emerald-500/40',
+      badge: 'Estimasi'
     },
     {
       id: 'pengumuman' as TabType,

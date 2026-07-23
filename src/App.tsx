@@ -11,7 +11,6 @@ import { PendingPage } from './pages/PendingPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { DataHarianPage } from './pages/DataHarianPage';
 import { LaporanHarianPage } from './pages/LaporanHarianPage';
-import { RiwayatLaporanPage } from './pages/RiwayatLaporanPage';
 import { PengumumanPage } from './pages/PengumumanPage';
 import { PostinganPage } from './pages/PostinganPage';
 import { ProfilPage } from './pages/ProfilPage';
@@ -98,8 +97,6 @@ const AppContent: React.FC = () => {
         return <DataHarianPage />;
       case 'laporan':
         return <LaporanHarianPage />;
-      case 'riwayat':
-        return <RiwayatLaporanPage />;
       case 'gaji':
         return <GajiPage />;
       case 'pengumuman':

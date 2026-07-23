@@ -80,15 +80,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ setActiveTab }) =>
       badge: 'Utama'
     },
     {
-      id: 'riwayat' as TabType,
-      title: 'Riwayat Laporan',
-      desc: 'Arsip & histori kinerja',
-      icon: Clock3,
-      color: 'from-blue-500 via-indigo-500 to-purple-600',
-      glow: 'shadow-indigo-500/20 hover:shadow-indigo-500/40',
-      badge: `${reports.length} Data`
-    },
-    {
       id: 'gaji' as TabType,
       title: 'Gaji Saya',
       desc: 'Estimasi & rincian gaji',
@@ -217,7 +208,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ setActiveTab }) =>
             let bgSolid = 'bg-blue-600';
             if (menu.id === 'data_harian') bgSolid = 'bg-emerald-500';
             else if (menu.id === 'laporan') bgSolid = 'bg-sky-500';
-            else if (menu.id === 'riwayat') bgSolid = 'bg-indigo-500';
             else if (menu.id === 'pengumuman') bgSolid = 'bg-orange-500';
             else if (menu.id === 'profil') bgSolid = 'bg-teal-500';
             else if (menu.id === 'admin') bgSolid = 'bg-purple-500';
